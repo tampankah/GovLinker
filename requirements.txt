@@ -7,7 +7,7 @@ python-dotenv
 Pillow
 pdf2image
 langchain
-pypdf
 python-multipart
 langchain-comunity
 sentence-transformers
+PyPDF2

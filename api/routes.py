@@ -102,7 +102,7 @@ def analyze_document_results(results: List[dict]) -> DocumentCheckResult:
     missing_fields = []
     errors = []
     for field in required_fields:
-        if not any(field in result.get("content", "") for result in results):
+        if not any(field in result["content"] for result in results if "content" in result):
             missing_fields.append(field)
     is_valid = len(missing_fields) == 0
     return DocumentCheckResult(is_valid=is_valid, missing_fields=missing_fields, errors=errors)

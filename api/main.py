@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from api.routes_langchain import router
+from api.routes import router
 
 app = FastAPI(
     title="DMV Document Validator and Assistant",
