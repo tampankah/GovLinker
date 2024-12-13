@@ -5,20 +5,20 @@ from utils.image_utils import encode_image_to_base64, convert_pdf_to_images, pil
 import os
 from langchain_xai import ChatXAI
 
-# Konfiguracja
+# Configuration
 XAI_API_KEY = os.getenv("XAI_API_KEY")
 VISION_MODEL_NAME = "grok-vision-beta"
 CHAT_MODEL_NAME = "grok-beta"
 
-# Inicjalizacja klienta ChatXAI
-client = ChatXAI(
+# Initialize ChatXAI client
+client = OpenAI(
     model=CHAT_MODEL_NAME,
     api_key=XAI_API_KEY
 )
 
 router = APIRouter()
 
-# Mockowane dokumenty
+# Mocked documents
 DOCUMENTS_DB = {
     "driver_license_application": {
         "document_name": "Driver's License Application Form",
@@ -109,12 +109,16 @@ def ask_question(request: QuestionRequest):
         {"role": "user", "content": request.question}
     ]
 
-    response = process_chat_with_grok(messages)
+    response = client.chat.completions.create(
+            model=CHAT_MODEL_NAME,
+            messages=messages
+        )
     return [response]
 
 def process_chat_with_grok(messages: List[dict]) -> str:
-    response = client.chat(messages=messages)
+    response = client.send_messages(messages=messages)  # Przykład innej metody
     return response.choices[0].message["content"]
+
 
 @router.post("/get-document", response_model=DocumentResponse)
 def get_document_endpoint(request: DocumentRequest):
