@@ -2,10 +2,10 @@ import base64
 from PIL import Image
 import io
 
-def encode_image_to_base64(image_path: str) -> str:
-    """Konwertuje obraz na ciąg Base64."""
-    with open(image_path, "rb") as image_file:
-        return base64.b64encode(image_file.read()).decode("utf-8")
+def encode_image_to_base64(image_file):
+    image_file.seek(0) 
+    image_data = image_file.read()
+    return base64.b64encode(image_data).decode('utf-8')
 
 def convert_pdf_to_images(pdf_path: str) -> list:
     """Konwertuje plik PDF na listę obrazów w formacie PIL."""
