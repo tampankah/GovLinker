@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 
 class ChatBubble extends StatelessWidget {
   final String message;
   final bool isUserMessage;
+  final bool isMarkdown; // New field
 
   const ChatBubble({
     Key? key,
     required this.message,
     required this.isUserMessage,
+    this.isMarkdown = false,
   }) : super(key: key);
 
   @override
@@ -23,9 +26,17 @@ class ChatBubble extends StatelessWidget {
             border: Border.all(color: Colors.deepPurple, width: 2), // Purple border
           ),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Text(
+          child: isMarkdown
+              ? MarkdownBody(
+            data: message,
+            styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context)).copyWith(
+              p: const TextStyle(color: Colors.white),
+              listBullet: const TextStyle(color: Colors.white),
+            ),
+          )
+              : Text(
             message,
-            style: const TextStyle(color: Colors.white), // White text color
+            style: const TextStyle(color: Colors.white),
           ),
         ),
       ),

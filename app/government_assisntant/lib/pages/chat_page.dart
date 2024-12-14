@@ -33,26 +33,27 @@ class _ChatBodyState extends State<ChatBody> {
   void _sendMessage() async {
     if (_controller.text.trim().isEmpty) return;
 
-    final apiProvider = Provider.of<ApiProvider>(context, listen: false);  // Accessing ApiProvider
-    await apiProvider.generateResponse(_controller.text);  // Sending request to API
+    final apiProvider = Provider.of<ApiProvider>(context, listen: false); // Accessing ApiProvider
+    await apiProvider.generateResponse(_controller.text); // Sending request to API
 
     _controller.clear();
   }
 
   @override
   Widget build(BuildContext context) {
-    final apiProvider = Provider.of<ApiProvider>(context);  // Accessing ApiProvider
+    final apiProvider = Provider.of<ApiProvider>(context); // Accessing ApiProvider
 
     return Column(
       children: [
         Expanded(
           child: ListView.builder(
-            itemCount: apiProvider.messages.length,  // Fetching messages from ApiProvider
+            itemCount: apiProvider.messages.length, // Fetching messages from ApiProvider
             itemBuilder: (context, index) {
-              final message = apiProvider.messages[index];  // Message object
+              final message = apiProvider.messages[index]; // Message object
               return ChatBubble(
-                message: message.message,  // Message text
-                isUserMessage: message.isUserMessage,  // Is this a user message?
+                message: message.message, // Message text
+                isUserMessage: message.isUserMessage, // Is this a user message?
+                isMarkdown: message.isMarkdown, // Markdown flag
               );
             },
           ),

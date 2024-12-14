@@ -3,15 +3,15 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class ApiProvider with ChangeNotifier {
-  List<Message> _messages = [];  // Lista wiadomości, która będzie zawierać zarówno zapytania, jak i odpowiedzi
+  List<Message> _messages = []; // List of messages containing both user queries and responses
 
-  List<Message> get messages => _messages;  // Getter dla listy wiadomości
+  List<Message> get messages => _messages; // Getter for messages
 
   // Method to send the question to the API
   Future<void> generateResponse(String question) async {
     var url = Uri.parse('http://127.0.0.1:8000/generate-response');
     try {
-      // Dodanie wiadomości użytkownika do listy
+      // Add the user message to the list
       _messages.add(Message(message: question, isUserMessage: true));
       notifyListeners();
 
@@ -27,10 +27,10 @@ class ApiProvider with ChangeNotifier {
       if (response.statusCode == 200) {
         var responseData = json.decode(response.body);
 
-        // Zabezpieczenie przed błędami typu
+        // Validate response type
         if (responseData is List) {
           String serverResponse = responseData.isNotEmpty ? responseData[0] : '';
-          _messages.add(Message(message: serverResponse, isUserMessage: false));  // Dodanie odpowiedzi serwera
+          _messages.add(Message(message: serverResponse, isUserMessage: false, isMarkdown: true)); // Add Markdown response
         } else {
           print("Unexpected response format");
         }
@@ -46,10 +46,11 @@ class ApiProvider with ChangeNotifier {
   }
 }
 
-// Klasa do reprezentowania wiadomości
+// Class to represent messages
 class Message {
   final String message;
   final bool isUserMessage;
+  final bool isMarkdown; // New field to identify Markdown content
 
-  Message({required this.message, required this.isUserMessage});
+  Message({required this.message, required this.isUserMessage, this.isMarkdown = false});
 }
