@@ -4,7 +4,7 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 class ChatBubble extends StatelessWidget {
   final String message;
   final bool isUserMessage;
-  final bool isMarkdown; // New field
+  final bool isMarkdown;
 
   const ChatBubble({
     Key? key,
@@ -23,7 +23,7 @@ class ChatBubble extends StatelessWidget {
           decoration: BoxDecoration(
             color: isUserMessage ? Colors.blue : Colors.grey[700],
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.deepPurple, width: 2), // Purple border
+            border: Border.all(color: Colors.deepPurple, width: 2),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: isMarkdown
