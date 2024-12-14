@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/api_provider.dart';
+import '../widgets/chat_bubble.dart';
 
 class ChatPage extends StatelessWidget {
   const ChatPage({super.key});
@@ -10,7 +11,8 @@ class ChatPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Government Assistant'),
-        backgroundColor: Colors.deepPurple, // Purple color for app bar
+        backgroundColor: Colors.black,
+        centerTitle: true,
       ),
       body: const ChatBody(),
     );
@@ -48,26 +50,10 @@ class _ChatBodyState extends State<ChatBody> {
             itemCount: apiProvider.answers.length,  // Fetching answers from ApiProvider
             itemBuilder: (context, index) {
               final message = apiProvider.answers[index];  // API response
-              final isUserMessage = index.isEven;
-              return Align(
-                alignment: isUserMessage
-                    ? Alignment.centerRight
-                    : Alignment.centerLeft,
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: isUserMessage ? Colors.blue : Colors.grey[700],
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.deepPurple, width: 2), // Purple border
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    child: Text(
-                      message,
-                      style: const TextStyle(color: Colors.white), // White text color
-                    ),
-                  ),
-                ),
+              final isUserMessage = index.isOdd;  // Change to 'isOdd' for alternating sides
+              return ChatBubble(
+                message: message,
+                isUserMessage: isUserMessage,
               );
             },
           ),
