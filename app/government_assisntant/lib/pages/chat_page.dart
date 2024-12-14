@@ -47,13 +47,12 @@ class _ChatBodyState extends State<ChatBody> {
       children: [
         Expanded(
           child: ListView.builder(
-            itemCount: apiProvider.answers.length,  // Fetching answers from ApiProvider
+            itemCount: apiProvider.messages.length,  // Fetching messages from ApiProvider
             itemBuilder: (context, index) {
-              final message = apiProvider.answers[index];  // API response
-              final isUserMessage = index.isOdd;  // Change to 'isOdd' for alternating sides
+              final message = apiProvider.messages[index];  // Message object
               return ChatBubble(
-                message: message,
-                isUserMessage: isUserMessage,
+                message: message.message,  // Message text
+                isUserMessage: message.isUserMessage,  // Is this a user message?
               );
             },
           ),

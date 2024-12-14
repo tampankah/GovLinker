@@ -1,4 +1,3 @@
-// lib/widgets/chat_bubble.dart
 import 'package:flutter/material.dart';
 
 class ChatBubble extends StatelessWidget {
