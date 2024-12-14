@@ -5,19 +5,21 @@ from utils.image_utils import encode_image_to_base64, convert_pdf_to_images, pil
 import os
 from openai import OpenAI
 
-XAI_API_KEY = os.getenv("XAI_API_KEY")  
-VISION_MODEL_NAME = "grok-vision-beta" 
-CHAT_MODEL_NAME = "grok-beta"  
+# API key and model names for OpenAI integration
+XAI_API_KEY = os.getenv("XAI_API_KEY")  # Retrieve API key from environment variable
+VISION_MODEL_NAME = "grok-vision-beta"  # Vision model name
+CHAT_MODEL_NAME = "grok-beta"  # Chat model name
 
+# Initialize OpenAI client
 client = OpenAI(
     api_key=XAI_API_KEY,
     base_url="https://api.x.ai/v1", 
 )
 
+# Define FastAPI router
 router = APIRouter()
 
-
-# Mocked documents
+# Mock database containing document information
 DOCUMENTS_DB = {
     "driver_license_application": {
         "document_name": "Driver's License Application Form",
@@ -33,33 +35,33 @@ DOCUMENTS_DB = {
     },
 }
 
-
+# Pydantic models for request and response validation
 class DocumentCheckResult(BaseModel):
     """
-    Model to represent the result of document validation.
+    Model representing the result of document validation.
     """
     is_valid: bool 
-    missing_fields: List[str]  
-    errors: List[str] 
+    missing_fields: List[str]  # List of missing fields in the document
+    errors: List[str]  # List of validation errors
 
 class QuestionRequest(BaseModel):
     """
-    Model for the user question in the /generate-response endpoint.
+    Model representing the user question in the /generate-response endpoint.
     """
-    question: str  
+    question: str  # User's question
 
 class DocumentRequest(BaseModel):
     """
     Model for specifying the type of document in the /validate-document endpoint.
     """
-    document_type: str  
+    document_type: str  # Document type identifier
 
 class DocumentResponse(BaseModel):
     """
-    Model for the response that contains document details.
+    Model representing the response containing document details.
     """
-    document_name: str 
-    url: str 
+    document_name: str  # Name of the document
+    url: str  # URL for downloading the document
 
 class FunctionCallResultMessage(BaseModel):
     """
@@ -74,27 +76,31 @@ async def validate_document(file: UploadFile):
     """
     Validates the document uploaded by the user (JPEG, PNG, or PDF).
     """
+    # Validate the file type
     if file.content_type not in ["image/jpeg", "image/png", "application/pdf"]:
         raise HTTPException(status_code=400, detail="Unsupported file type. Only JPEG, PNG, and PDF are allowed.")
 
+    # Process the file content based on its type
     if file.content_type == "application/pdf":
-        images = convert_pdf_to_images(file.file)
+        images = convert_pdf_to_images(file.file)  # Convert PDF to images
         base64_images = [pil_image_to_base64(image) for image in images]
     else:
-        base64_image = encode_image_to_base64(file.file)
+        base64_image = encode_image_to_base64(file.file)  # Encode image to base64
         base64_images = [base64_image]
 
+    # Process each image with the vision model
     results = []
     for image in base64_images:
         result = process_image_with_grok(image) 
         results.append(result)
 
+    # Analyze the aggregated results
     aggregated_result = analyze_document_results(results)
     return aggregated_result
 
 def process_image_with_grok(base64_image: str) -> dict:
     """
-    Sends the base64-encoded image to Grok's vision model for analysis.
+    Sends the base64-encoded image to the vision model for analysis.
     """
     response = client.chat.completions.create(
         model=VISION_MODEL_NAME,
@@ -121,14 +127,15 @@ def process_image_with_grok(base64_image: str) -> dict:
 
 def analyze_document_results(results: List[dict]) -> DocumentCheckResult:
     """
-    Analyzes the results from the vision model and checks for missing required fields.
+    Analyzes results from the vision model and checks for missing required fields.
     """
     required_fields = ["Name", "Date of Birth", "Document Number", "Expiration Date"]
     missing_fields = []
     errors = []
-    
+
+    # Check for missing fields in the document
     for field in required_fields:
-        if not any(field in result["content"] for result in results if "content" in result):
+        if not any(field in result.get("content", "") for result in results):
             missing_fields.append(field)
 
     is_valid = len(missing_fields) == 0
@@ -146,60 +153,42 @@ def ask_question(request: QuestionRequest):
     ]
 
     try:
-        print(f"Base messages: {base_messages}")  # Debug print 1: Check base messages structure
-
         # Initial API call to the chat model
         response = client.chat.completions.create(
             model=CHAT_MODEL_NAME,
             messages=base_messages,
         )
-        print(f"API response: {response}")  # Debug print 2: Check the response from the chat model
 
-        # Extract the first response from the chat model using the correct attribute
+        # Extract the first response from the chat model
         message = response.choices[0].message
-        print(f"Message content: {message.content}")  # Debug print 3: Check the message content
-
-        # Check if tool_calls exist, in case the response involves using tools (no tool calls in the current example)
-        tool_call_id = None
-        if hasattr(message, 'tool_calls') and message.tool_calls:
-            tool_call_id = message.tool_calls[0].get('id', None)
-        print(f"Extracted tool call ID: {tool_call_id}")  # Debug print 4: Check if tool call ID is extracted properly
-
-        if tool_call_id is None:
-            print("No tool call ID found in the response.")  # Debug print 5: If no tool call ID is found
 
         # Generate HTML content with links to documents
         document_links_html = ""
         for doc_key, doc_info in DOCUMENTS_DB.items():
             document_links_html += f'<p><a href="{doc_info["url"]}" download="{doc_info["document_name"]}">{doc_info["document_name"]}</a></p>'
-        print(f"Generated HTML document links: {document_links_html}")  # Debug print 6: Check the generated HTML links
 
         # Define the tool-generated HTML message with document links
         function_call_result_message = {
             "role": "tool",
             "content": f"<html><body><h1>DMV Assistance Page</h1><p>This is the generated HTML content for the user's query.</p>{document_links_html}</body></html>",
-            "tool_call_id": tool_call_id,
+            "tool_call_id": None,
         }
-        print(f"Function call result message: {function_call_result_message}")  # Debug print 7: Check the generated tool call result message
 
         # Prepare a follow-up chat completion request with the tool call result
         follow_up_messages = base_messages + [response.choices[0].message, function_call_result_message]
-        print(f"Follow-up messages: {follow_up_messages}")  # Debug print 8: Check the follow-up messages sent to the chat model
 
         # Make the second API call with the tool result embedded
         final_response = client.chat.completions.create(
             model=CHAT_MODEL_NAME,
             messages=follow_up_messages,
         )
-        print(f"Final response: {final_response}")  # Debug print 9: Check the final response from the chat model
 
         # Extract the final response content
         answer = final_response.choices[0].message.content
         utf8_response = answer.encode("utf-8").decode("utf-8")  # Ensure UTF-8 compatibility
-        print(f"Final UTF-8 response: {utf8_response}")  # Debug print 10: Check the final UTF-8 response
 
         return [utf8_response]
 
     except Exception as e:
-        print(f"Error: {str(e)}")  # Debug print 11: Catch any errors and print them
+        # Handle exceptions and raise HTTP errors
         raise HTTPException(status_code=500, detail=f"Error processing the request: {str(e)}")
