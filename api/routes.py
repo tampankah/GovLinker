@@ -1,6 +1,6 @@
-from fastapi import APIRouter, UploadFile, HTTPException
+from fastapi import APIRouter, HTTPException, Request, Depends, UploadFile
 from pydantic import BaseModel
-from typing import List
+from typing import Optional, List
 from utils.image_utils import encode_image_to_base64, convert_pdf_to_images, pil_image_to_base64
 import os
 from openai import OpenAI
@@ -35,6 +35,18 @@ DOCUMENTS_DB = {
 }
 
 # Models
+class Location(BaseModel):
+    country: str
+    region: Optional[str] = None
+
+class UserRequest(BaseModel):
+    data: str
+    location: Location
+
+class LocationResponse(BaseModel):
+    message: str
+    location: Location
+
 class DocumentCheckResult(BaseModel):
     is_valid: bool
     missing_fields: List[str]
@@ -50,12 +62,18 @@ class DocumentResponse(BaseModel):
     document_name: str
     url: str
 
-# Initialize document store during application startup
-@router.on_event("startup")
-def initialize_rag():
-    global rag_store
-    txt_folder_path = "./documents"  # Folder containing text documents
-    rag_store = DocumentStore(txt_folder_path)
+# Dependency to extract location from request headers
+async def get_user_location(request: Request) -> Location:
+    country = request.headers.get("X-User-Country")
+    region = request.headers.get("X-User-Region")
+
+    if not country:
+        raise HTTPException(
+            status_code=400,
+            detail="Missing 'X-User-Country' header."
+        )
+
+    return Location(country=country, region=region)
 
 # Document store for managing text documents
 class DocumentStore:
@@ -82,6 +100,13 @@ class DocumentStore:
             return file.read()
 
 rag_store = None
+
+# Initialize document store during application startup
+@router.on_event("startup")
+def initialize_rag():
+    global rag_store
+    txt_folder_path = "./documents"  # Folder containing text documents
+    rag_store = DocumentStore(txt_folder_path)
 
 # Endpoint to validate documents
 @router.post("/validate-document", response_model=DocumentCheckResult)
@@ -143,13 +168,18 @@ def analyze_document_results(results: List[dict]) -> DocumentCheckResult:
     is_valid = len(missing_fields) == 0
     return DocumentCheckResult(is_valid=is_valid, missing_fields=missing_fields, errors=errors)
 
-# Endpoint for generating AI-assisted responses
+# Endpoint for generating AI-assisted responses based on user location
 @router.post("/generate-response", response_model=List[str])
-def ask_question(request: QuestionRequest):
+async def ask_question(request: QuestionRequest, location: Location = Depends(get_user_location)):
+    # Customize response based on location
+    region_message = f" in {location.region}" if location.region else ""
+    question_with_location = f"Question: {request.question}{region_message}"
+    
     messages = [
         {"role": "system", "content": "You are a helpful assistant for DMV-related processes and documents."},
-        {"role": "user", "content": f"Question: {request.question}"}
+        {"role": "user", "content": question_with_location}
     ]
+    
     try:
         response = client.chat.completions.create(
             model=CHAT_MODEL_NAME,
@@ -160,10 +190,22 @@ def ask_question(request: QuestionRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail="Error processing the request with Grok")
 
-# Endpoint for retrieving document information
-@router.post("/get-document", response_model=DocumentResponse)
-def get_document_endpoint(request: DocumentRequest):
-    document = DOCUMENTS_DB.get(request.document_type)
-    if not document:
-        raise HTTPException(status_code=404, detail="Document type not found")
-    return DocumentResponse(**document)
+# Endpoint to handle location-based requests
+@router.post("/process-user-data", response_model=LocationResponse)
+async def process_user_data(
+    user_request: UserRequest, 
+    location: Location = Depends(get_user_location)
+):
+    # Log the user location
+    print(f"Processing data for user in {location.country}, {location.region}")
+
+    # Simulate some processing
+    return LocationResponse(
+        message=f"Data processed successfully for user in {location.country}, {location.region}",
+        location=location
+    )
+
+# Endpoint to fetch location without requiring additional data
+@router.get("/get-location", response_model=Location)
+async def get_location(location: Location = Depends(get_user_location)):
+    return location
