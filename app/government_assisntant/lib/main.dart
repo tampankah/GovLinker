@@ -17,6 +17,13 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         title: 'Government Assistant',
         theme: ThemeData(
+          scaffoldBackgroundColor: Colors.black, // Black background for the whole app
+          appBarTheme: const AppBarTheme(
+            backgroundColor: Colors.deepPurple, // Purple app bar color
+          ),
+          textTheme: const TextTheme(
+            bodyLarge: TextStyle(color: Colors.white), // White text color for the body
+          ),
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
           useMaterial3: true,
         ),

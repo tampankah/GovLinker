@@ -15,7 +15,7 @@ class ApiProvider with ChangeNotifier {
 
   // Metoda wysyłająca zapytanie do API
   Future<void> generateResponse(String question) async {
-    var url = Uri.parse('http://your-api-url.com/generate-response');  // Zmień na odpowiedni URL API
+    var url = Uri.parse('http://localhost:8000/generate-response');  // Zmień na odpowiedni URL API
     var response = await http.post(
       url,
       headers: {'Content-Type': 'application/json'},
@@ -33,7 +33,7 @@ class ApiProvider with ChangeNotifier {
 
   // Metoda do walidacji dokumentu
   Future<void> validateDocument(List<int> fileBytes) async {
-    var url = Uri.parse('http://your-api-url.com/validate-document');  // Zmień na odpowiedni URL API
+    var url = Uri.parse('http://localhost:8000/validate-document');  // Zmień na odpowiedni URL API
     var request = http.MultipartRequest('POST', url)
       ..files.add(http.MultipartFile.fromBytes('file', fileBytes, filename: 'document.pdf'));
 
