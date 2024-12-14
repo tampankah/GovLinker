@@ -14,3 +14,21 @@ terraform.tfstate.backup
 venv/*
 
 __pycache__
+
+# Flutter build files
+/build/
+
+# Flutter/Dart package files
+/.dart_tool/
+
+# IDE specific files
+/.idea/
+/*.iml
+
+# Platform-specific files
+/android/
+/ios/
+/macos/
+/linux/
+/web/
+/windows/

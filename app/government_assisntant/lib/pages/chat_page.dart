@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/api_provider.dart'; 
+import '../providers/api_provider.dart';
 
 class ChatPage extends StatelessWidget {
   const ChatPage({super.key});
