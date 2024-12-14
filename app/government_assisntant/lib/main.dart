@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'providers/api_provider.dart';
 import 'pages/chat_page.dart';
 
 void main() {
@@ -10,14 +12,17 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Government Assistant',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
+    return ChangeNotifierProvider<ApiProvider>(
+      create: (_) => ApiProvider(),
+      child: MaterialApp(
+        title: 'Government Assistant',
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+          useMaterial3: true,
+        ),
+        home: const ChatPage(),
+        debugShowCheckedModeBanner: false,
       ),
-      home: const ChatPage(),
-      debugShowCheckedModeBanner: false,
     );
   }
 }

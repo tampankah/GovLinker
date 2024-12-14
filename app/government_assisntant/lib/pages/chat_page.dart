@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/chat_provider.dart'; /
+import '../providers/api_provider.dart'; 
 
 class ChatPage extends StatelessWidget {
   const ChatPage({super.key});
@@ -26,23 +26,27 @@ class ChatBody extends StatefulWidget {
 class _ChatBodyState extends State<ChatBody> {
   final TextEditingController _controller = TextEditingController();
 
-  void _sendMessage() {
+  // Funkcja do wysyłania zapytania do API
+  void _sendMessage() async {
     if (_controller.text.trim().isEmpty) return;
-    final chatProvider = Provider.of<ChatProvider>(context, listen: false);
-    chatProvider.sendMessage(_controller.text);
+
+    final apiProvider = Provider.of<ApiProvider>(context, listen: false);  // Uzyskujemy dostęp do ApiProvider
+    await apiProvider.generateResponse(_controller.text);  // Wysyłamy zapytanie do API
+
     _controller.clear();
   }
 
   @override
   Widget build(BuildContext context) {
-    final chatProvider = Provider.of<ChatProvider>(context);
+    final apiProvider = Provider.of<ApiProvider>(context);  // Uzyskujemy dostęp do ApiProvider
+
     return Column(
       children: [
         Expanded(
           child: ListView.builder(
-            itemCount: chatProvider.messages.length,
+            itemCount: apiProvider.answers.length,  // Pobieramy odpowiedzi z ApiProvider
             itemBuilder: (context, index) {
-              final message = chatProvider.messages[index];
+              final message = apiProvider.answers[index];  // Odpowiedź z API
               final isUserMessage = index.isEven;
               return Align(
                 alignment: isUserMessage
