@@ -15,20 +15,15 @@ venv/*
 
 __pycache__
 
-# Flutter build files
-/build/
+/app/government_assisntant/build/
+/app/government_assisntant/.dart_tool/
 
-# Flutter/Dart package files
-/.dart_tool/
+/app/government_assisntant/.idea/
+/app/government_assisntant/*.iml
 
-# IDE specific files
-/.idea/
-/*.iml
-
-# Platform-specific files
-/android/
-/ios/
-/macos/
-/linux/
-/web/
-/windows/
+/app/government_assisntant/android/
+/app/government_assisntant/ios/
+/app/government_assisntant/macos/
+/app/government_assisntant/linux/
+/app/government_assisntant/web/
+/app/government_assisntant/windows/
