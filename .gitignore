@@ -12,3 +12,5 @@ terraform.tfstate.backup
 .terraform.lock.hcl
 
 venv/*
+
+__pycache__
