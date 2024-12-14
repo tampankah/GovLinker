@@ -115,7 +115,7 @@ def ask_question(request: QuestionRequest):
     Responds to the user's question related to DMV processes using the Grok chat model.
     """
     messages = [
-        {"role": "system", "content": "You are a helpful assistant for DMV-related processes and documents."},
+        {"role": "system", "content": "You are fuuny a helpful assistant for DMV-related processes and documents a short message with 2/10 knowledge the most relevant."},
         {"role": "user", "content": f"Question: {request.question}"}
     ]
     try:

@@ -1,6 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'chat_provider.dart';
+import '../providers/chat_provider.dart'; // Poprawne importowanie provider'a
+
+class ChatPage extends StatelessWidget { // Upewnij się, że jest to klasa StatelessWidget
+  const ChatPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Chat Page'),
+      ),
+      body: const ChatBody(), // Twoja ChatBody, która renderuje interfejs czatu
+    );
+  }
+}
 
 class ChatBody extends StatefulWidget {
   const ChatBody({super.key});
