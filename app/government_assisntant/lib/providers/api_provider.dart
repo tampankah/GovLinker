@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'dart:io';
+import 'package:http_parser/http_parser.dart';
 
 class ApiProvider with ChangeNotifier {
   List<Message> _messages = [];
@@ -20,12 +22,16 @@ class ApiProvider with ChangeNotifier {
       );
 
       if (response.statusCode == 200) {
-        var responseBody = utf8.decode(response.bodyBytes); // Decode response as UTF-8
+        var responseBody = utf8.decode(
+            response.bodyBytes); // Decode response as UTF-8
         var responseData = json.decode(responseBody);
 
         if (responseData is List) {
-          String serverResponse = responseData.isNotEmpty ? responseData[0] : '';
-          _messages.add(Message(message: serverResponse, isUserMessage: false, isMarkdown: true));
+          String serverResponse = responseData.isNotEmpty
+              ? responseData[0]
+              : '';
+          _messages.add(Message(
+              message: serverResponse, isUserMessage: false, isMarkdown: true));
         }
 
         notifyListeners();
@@ -37,9 +43,81 @@ class ApiProvider with ChangeNotifier {
       throw Exception('Failed to send request');
     }
   }
+
+  Future<void> uploadDocument(String filePath) async {
+    var url = Uri.parse('http://127.0.0.1:8000/validate-document'); // Correct endpoint
+    try {
+      // Inform the user about the upload
+      _messages.add(Message(message: 'Uploading document...', isUserMessage: true));
+      notifyListeners();
+
+      // Detect the file's MIME type
+      String mimeType = '';
+      if (filePath.endsWith('.png')) {
+        mimeType = 'image/png';
+      } else if (filePath.endsWith('.jpg') || filePath.endsWith('.jpeg')) {
+        mimeType = 'image/jpeg';
+      } else if (filePath.endsWith('.pdf')) {
+        mimeType = 'application/pdf';
+      } else {
+        throw Exception('Unsupported file type. Only JPEG, PNG, and PDF are allowed.');
+      }
+
+      // Create a multipart request with correct headers
+      var request = http.MultipartRequest('POST', url);
+      request.files.add(await http.MultipartFile.fromPath(
+        'file',
+        filePath,
+        contentType: MediaType.parse(mimeType),
+      ));
+
+      // Send the request and wait for the response
+      var streamedResponse = await request.send();
+      var response = await http.Response.fromStream(streamedResponse);
+
+      if (response.statusCode == 200) {
+        // Decode the response and display the result
+        var responseBody = utf8.decode(response.bodyBytes);
+        var responseData = json.decode(responseBody);
+
+        _messages.add(Message(
+          message: responseData['result'] ?? 'Document validation completed.',
+          isUserMessage: false,
+          isMarkdown: true,
+        ));
+      } else if (response.statusCode == 400) {
+        // Handle unsupported file type error
+        var responseBody = utf8.decode(response.bodyBytes);
+        var responseData = json.decode(responseBody);
+
+        _messages.add(Message(
+          message: responseData['detail'] ?? 'Unsupported file type.',
+          isUserMessage: false,
+        ));
+      } else {
+        // Handle other errors
+        _messages.add(Message(
+          message: 'Document upload failed: ${response.reasonPhrase}',
+          isUserMessage: false,
+        ));
+        print('Response body: ${response.body}');
+        print('Response status: ${response.statusCode}');
+      }
+
+      notifyListeners();
+    } catch (e) {
+      // Handle unexpected errors
+      print('Error occurred: $e');
+      _messages.add(Message(
+        message: e.toString(),
+        isUserMessage: false,
+      ));
+      notifyListeners();
+    }
+  }
 }
 
-class Message {
+  class Message {
   final String message;
   final bool isUserMessage;
   final bool isMarkdown;

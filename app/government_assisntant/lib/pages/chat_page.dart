@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/api_provider.dart';
 import '../widgets/chat_bubble.dart';
+import 'package:file_picker/file_picker.dart';
 
 class ChatPage extends StatelessWidget {
   const ChatPage({super.key});
@@ -39,12 +40,25 @@ class _ChatBodyState extends State<ChatBody> {
     _controller.clear();
   }
 
-  // Function to handle document upload (mock implementation)
-  void _addDocument() {
-    // Logic for adding/uploading documents can go here
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Document upload feature coming soon!')),
-    );
+  // Function to handle document upload
+  void _addDocument() async {
+    final apiProvider = Provider.of<ApiProvider>(context, listen: false);
+
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf', 'doc', 'docx'],
+      );
+
+      if (result != null) {
+        String filePath = result.files.single.path!;
+        await apiProvider.uploadDocument(filePath);
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to pick or upload document: $e')),
+      );
+    }
   }
 
   @override
