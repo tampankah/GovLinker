@@ -11,7 +11,7 @@ class ChatPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Governments assistant'), // Updated title
+        title: const Text('Government Assistant'), // Updated title
         backgroundColor: Colors.black,
         centerTitle: true,
       ),
@@ -52,7 +52,7 @@ class _ChatBodyState extends State<ChatBody> {
 
       if (result != null) {
         String filePath = result.files.single.path!;
-        await apiProvider.uploadDocument(filePath);
+        await apiProvider.uploadDocument(filePath); // Upload the document for validation
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(

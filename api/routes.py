@@ -77,52 +77,15 @@ class FunctionCallResultMessage(BaseModel):
     content: str
     tool_call_id: str
 
-@router.post("/validate-document", response_model=DocumentCheckResult)
-async def validate_document(file: UploadFile):
-    """
-    Validates the document uploaded by the user (JPEG, PNG, or PDF).
-    """
-    # Validate the file type
-    if file.content_type not in ["image/jpeg", "image/png", "application/pdf"]:
-        raise HTTPException(status_code=400, detail="Unsupported file type. Only JPEG, PNG, and PDF are allowed.")
-
-    base64_images = []
-
-    try:
-        if file.content_type == "application/pdf":
-            # Save the uploaded PDF to a temporary file
-            with tempfile.NamedTemporaryFile(delete=True, suffix=".pdf") as temp_pdf:
-                temp_pdf.write(file.file.read())
-                temp_pdf.flush()  # Ensure all data is written to disk
-                images = convert_pdf_to_images(temp_pdf.name)  # Convert PDF to images
-                base64_images = [pil_image_to_base64(image) for image in images]
-        else:
-            # Encode image to base64 directly
-            base64_image = encode_image_to_base64(file.file)
-            base64_images = [base64_image]
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error processing the document: {str(e)}")
-
-    # Process each image with the vision model
-    results = []
-    for image in base64_images:
-        result = process_image_with_grok(image) 
-        results.append(result)
-
-    # Analyze the aggregated results
-    aggregated_result = analyze_document_results(results)
-    return aggregated_result
-
+# Function to handle sending image data to Grok Vision model
 def process_image_with_grok(base64_image: str) -> dict:
     """
-    Sends the base64-encoded image to the Grok Vision model for analysis.
+    Sends a base64-encoded image to the Grok Vision model for analysis.
     """
     try:
-        # Send the image to the vision model
         logger.debug("Sending request to Grok Vision model.")
         response = client.chat.completions.create(
-            model=VISION_MODEL_NAME,
+            model=VISION_MODEL_NAME,  # Vision model name
             messages=[
                 {
                     "role": "user",
@@ -142,134 +105,78 @@ def process_image_with_grok(base64_image: str) -> dict:
                 }
             ],
         )
-
-        # Log the raw response for debugging purposes
         logger.debug("Received response from Grok Vision model: %s", response)
-
-        # Return the relevant part of the response
-        return response.choices[0].message
+        return response.choices[0].message  # Return the structured result
     except Exception as e:
-        # Log any errors that occur during the request
         logger.error("Error while processing image with Grok Vision model: %s", str(e))
-        raise
+        if "404" in str(e):
+            raise HTTPException(status_code=404, detail="The requested Grok Vision model does not exist or is inaccessible.")
+        raise HTTPException(status_code=500, detail=f"Error while processing image: {str(e)}")
 
-def analyze_document_results(results: List[str]) -> DocumentCheckResult:
+
+# Main API endpoint for document validation
+@router.post("/validate-document")
+async def validate_document(file: UploadFile):
     """
-    Analyzes the results from the vision model, extracting and categorizing required fields.
-    Classifies them into required fields, missing fields, filling fields, and provides guidance to fill them.
-
-    Args:
-        results (List[str]): A list of base64-encoded images to analyze.
-
-    Returns:
-        DocumentCheckResult: The analysis results indicating validity, missing fields, errors, and guidance.
+    Validates the document uploaded by the user (JPEG, PNG, or PDF).
     """
-    missing_fields = []
-    filling_fields = []
-    filled_fields = []
-    required_fields = []  # Grok will decide this
-
-    errors = []
-    field_guidance = []
-
-    # Ensure that the input results are a list of base64-encoded images
-    if not isinstance(results, list) or not all(isinstance(image, str) for image in results):
-        errors.append("Invalid input: 'results' must be a list of base64-encoded image strings.")
-        return DocumentCheckResult(is_valid=False, missing_fields=missing_fields, errors=errors)
-
-    extracted_fields = []  # Store extracted fields from all images
+    # Validate the file type
+    if file.content_type not in ["image/jpeg", "image/png", "application/pdf"]:
+        raise HTTPException(status_code=400, detail="Unsupported file type. Only JPEG, PNG, and PDF are allowed.")
 
     try:
-        for image in results:
-            # Send image to Grok Vision model for analysis
-            response = client.chat.completions.create(
-                model=VISION_MODEL_NAME,
-                messages=[
-                    {
-                        "role": "user",
-                        "content": [
-                            {
-                                "type": "image_url",
-                                "image_url": {
-                                    "url": f"data:image/jpeg;base64,{image}",
-                                    "detail": "high",
-                                },
-                            },
-                            {
-                                "type": "text",
-                                "text": "Identify required fields in the document and their current status. Return required, filled, missing, and partially filled fields.",
-                            },
-                        ],
-                    }
-                ],
-            )
+        base64_images = []
 
-            # Extract the response content and validate
-            vision_output = response.choices[0].message.get("content", {})
-            if isinstance(vision_output, dict):
-                if "required_fields" in vision_output:
-                    required_fields.extend(vision_output["required_fields"])
-                if "fields" in vision_output:
-                    extracted_fields.extend(vision_output["fields"])
-            else:
-                errors.append("Invalid response from vision model for one of the images.")
-    except Exception as e:
-        errors.append(f"Error during vision model processing: {str(e)}")
-        return DocumentCheckResult(is_valid=False, missing_fields=missing_fields, errors=errors)
-
-    # Categorize the extracted fields
-    for field in required_fields:
-        matching_field = next(
-            (extracted_field for extracted_field in extracted_fields if field.lower() in extracted_field.lower()), 
-            None
-        )
-
-        if matching_field:
-            if 'incomplete' in matching_field.lower():  # If the field is partially filled
-                filling_fields.append(field)
-            else:  # If the field is completely filled
-                filled_fields.append(field)
+        if file.content_type == "application/pdf":
+            # Convert PDF pages to images
+            with tempfile.NamedTemporaryFile(delete=True, suffix=".pdf") as temp_pdf:
+                temp_pdf.write(file.file.read())
+                temp_pdf.flush()
+                images = convert_pdf_to_images(temp_pdf.name)
+                base64_images = [pil_image_to_base64(image) for image in images]
         else:
-            missing_fields.append(field)
+            # Encode the single image file to base64
+            base64_image = encode_image_to_base64(file.file)
+            base64_images = [base64_image]
 
-    # Now we will pass missing and filling fields to the text generation model for guidance
-    if missing_fields or filling_fields:
-        try:
-            # Prepare the question for the chat model to generate assistance text
-            missing_or_filling_fields_text = ", ".join(missing_fields + filling_fields)
-            question = f"The following required fields are missing or partially filled: {missing_or_filling_fields_text}. " \
-                       "Can you provide fun and easy ways for the user to fill these fields correctly?"
+        # Process each image using Grok Vision model
+        aggregated_results = []
+        for base64_image in base64_images:
+            result = process_image_with_grok(base64_image)
+            aggregated_results.append(result)
 
-            # Create a new agent (text generation model) to assist the user
-            response = client.chat.completions.create(
-                model=CHAT_MODEL_NAME,
-                messages=[
-                    {"role": "system", "content": "You are a fun and helpful assistant guiding users to complete their documents in an easy way."},
-                    {"role": "user", "content": question},
-                ],
-            )
+        # Pass the aggregated result to the Grok Text model for further processing
+        response = process_document_with_text_model(aggregated_results)
+        return response
 
-            # Extract the generated guidance from the response
-            guidance_message = response.choices[0].message['content']
-            field_guidance.append(guidance_message)  # Add the generated guidance for the user
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error processing the document: {str(e)}")
 
-        except Exception as e:
-            errors.append(f"Error processing with chat model: {str(e)}")
 
-    # Determine if the document is valid (no missing fields)
-    is_valid = len(missing_fields) == 0
+# Function to process aggregated results with the Grok Text model
+def process_document_with_text_model(aggregated_results: list) -> dict:
+    """
+    Processes the aggregated results using the Grok Text model for final response.
+    """
+    document_context = " ".join([str(result) for result in aggregated_results])
 
-    # Return the results with field statuses, errors, and any additional guidance
-    return DocumentCheckResult(
-        is_valid=is_valid,
-        required_fields=required_fields,  # Return the dynamically determined required fields
-        missing_fields=missing_fields,
-        filled_fields=filled_fields,
-        filling_fields=filling_fields,
-        errors=errors,
-        field_guidance=field_guidance  # Guidance generated by the text model for filling fields
-    )
+    try:
+        # Send the aggregated document context to the Grok Text model for processing
+        response = client.chat.completions.create(
+            model=CHAT_MODEL_NAME,  # Chat model name
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant guiding users to complete their documents."},
+                {"role": "user", "content": document_context},
+            ],
+        )
+        logger.debug("Received response from Grok Text model: %s", response)
 
+        return response.choices[0].message  # Return the generated message as response
+
+    except Exception as e:
+        logger.error("Error processing with Grok Text model: %s", str(e))
+        raise HTTPException(status_code=500, detail=f"Error processing with Grok Text model: {str(e)}")
+        
 @router.post("/generate-response", response_model=List[str])
 def ask_question(request: QuestionRequest):
     """

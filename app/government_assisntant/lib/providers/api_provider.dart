@@ -45,7 +45,7 @@ class ApiProvider with ChangeNotifier {
   }
 
   Future<void> uploadDocument(String filePath) async {
-    var url = Uri.parse('http://127.0.0.1:8000/validate-document_2'); // Correct endpoint
+    var url = Uri.parse('http://127.0.0.1:8000/validate-document'); // Updated endpoint
     try {
       // Inform the user about the upload
       _messages.add(Message(message: 'Uploading document...', isUserMessage: true));
@@ -53,14 +53,12 @@ class ApiProvider with ChangeNotifier {
 
       // Detect the file's MIME type
       String mimeType = '';
-      if (filePath.endsWith('.png')) {
-        mimeType = 'image/png';
-      } else if (filePath.endsWith('.jpg') || filePath.endsWith('.jpeg')) {
-        mimeType = 'image/jpeg';
-      } else if (filePath.endsWith('.pdf')) {
+      if (filePath.endsWith('.pdf')) {
         mimeType = 'application/pdf';
+      } else if (filePath.endsWith('.docx')) {
+        mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
       } else {
-        throw Exception('Unsupported file type. Only JPEG, PNG, and PDF are allowed.');
+        throw Exception('Unsupported file type. Only PDF and DOCX are allowed.');
       }
 
       // Create a multipart request with correct headers
@@ -80,8 +78,21 @@ class ApiProvider with ChangeNotifier {
         var responseBody = utf8.decode(response.bodyBytes);
         var responseData = json.decode(responseBody);
 
+        // Assuming the response contains a 'fields' object with required field info
+        String resultMessage = '### Document Validation Result:\n';
+
+        // Example of parsing and formatting the response (based on your response structure)
+        if (responseData['fields'] != null) {
+          responseData['fields'].forEach((field, status) {
+            resultMessage += '- **$field**: $status\n';
+          });
+        } else {
+          resultMessage = 'No field information returned from the document validation.';
+        }
+
+        // Add the result message to the chat
         _messages.add(Message(
-          message: responseData['result'] ?? 'Document validation completed.',
+          message: resultMessage,
           isUserMessage: false,
           isMarkdown: true,
         ));
@@ -100,8 +111,6 @@ class ApiProvider with ChangeNotifier {
           message: 'Document upload failed: ${response.reasonPhrase}',
           isUserMessage: false,
         ));
-        print('Response body: ${response.body}');
-        print('Response status: ${response.statusCode}');
       }
 
       notifyListeners();
