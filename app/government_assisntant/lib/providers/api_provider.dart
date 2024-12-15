@@ -22,8 +22,7 @@ class ApiProvider with ChangeNotifier {
       );
 
       if (response.statusCode == 200) {
-        var responseBody = utf8.decode(
-            response.bodyBytes); // Decode response as UTF-8
+        var responseBody = utf8.decode(response.bodyBytes); // Decode response as UTF-8
         var responseData = json.decode(responseBody);
 
         if (responseData is List) {
@@ -78,23 +77,14 @@ class ApiProvider with ChangeNotifier {
         var responseBody = utf8.decode(response.bodyBytes);
         var responseData = json.decode(responseBody);
 
-        // Assuming the response contains a 'fields' object with required field info
-        String resultMessage = '### Document Validation Result:\n';
-
-        // Example of parsing and formatting the response (based on your response structure)
-        if (responseData['fields'] != null) {
-          responseData['fields'].forEach((field, status) {
-            resultMessage += '- **$field**: $status\n';
-          });
-        } else {
-          resultMessage = 'No field information returned from the document validation.';
-        }
+        // Assuming the response contains a 'content' key with the full document validation message
+        String resultMessage = responseData['content'] ?? 'No content available';
 
         // Add the result message to the chat
         _messages.add(Message(
           message: resultMessage,
           isUserMessage: false,
-          isMarkdown: true,
+          isMarkdown: true, // Mark as markdown to render properly
         ));
       } else if (response.statusCode == 400) {
         // Handle unsupported file type error
@@ -126,7 +116,7 @@ class ApiProvider with ChangeNotifier {
   }
 }
 
-  class Message {
+class Message {
   final String message;
   final bool isUserMessage;
   final bool isMarkdown;

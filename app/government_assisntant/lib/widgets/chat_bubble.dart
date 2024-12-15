@@ -32,6 +32,7 @@ class ChatBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // If message is Markdown, render it as Markdown, otherwise convert HTML to Markdown
     final String renderedMessage = isMarkdown ? message : _convertHtmlToMarkdown(message);
 
     return Align(
