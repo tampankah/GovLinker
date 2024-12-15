@@ -10,7 +10,7 @@ class ChatPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Process Documents'), // Updated title
+        title: const Text('Governments assistant'), // Updated title
         backgroundColor: Colors.black,
         centerTitle: true,
       ),
