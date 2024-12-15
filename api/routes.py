@@ -1,6 +1,7 @@
 from fastapi import APIRouter, UploadFile, HTTPException
 from pydantic import BaseModel
 from typing import List
+import tempfile
 from utils.image_utils import encode_image_to_base64, convert_pdf_to_images, pil_image_to_base64
 import os
 from openai import OpenAI
@@ -18,6 +19,8 @@ client = OpenAI(
 
 # Define FastAPI router
 router = APIRouter()
+
+logger = logging.getLogger(__name__)
 
 # Mock database containing document information
 DOCUMENTS_DB = {
@@ -80,13 +83,23 @@ async def validate_document(file: UploadFile):
     if file.content_type not in ["image/jpeg", "image/png", "application/pdf"]:
         raise HTTPException(status_code=400, detail="Unsupported file type. Only JPEG, PNG, and PDF are allowed.")
 
-    # Process the file content based on its type
-    if file.content_type == "application/pdf":
-        images = convert_pdf_to_images(file.file)  # Convert PDF to images
-        base64_images = [pil_image_to_base64(image) for image in images]
-    else:
-        base64_image = encode_image_to_base64(file.file)  # Encode image to base64
-        base64_images = [base64_image]
+    base64_images = []
+
+    try:
+        if file.content_type == "application/pdf":
+            # Save the uploaded PDF to a temporary file
+            with tempfile.NamedTemporaryFile(delete=True, suffix=".pdf") as temp_pdf:
+                temp_pdf.write(file.file.read())
+                temp_pdf.flush()  # Ensure all data is written to disk
+                images = convert_pdf_to_images(temp_pdf.name)  # Convert PDF to images
+                base64_images = [pil_image_to_base64(image) for image in images]
+        else:
+            # Encode image to base64 directly
+            base64_image = encode_image_to_base64(file.file)
+            base64_images = [base64_image]
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error processing the document: {str(e)}")
 
     # Process each image with the vision model
     results = []
@@ -127,18 +140,41 @@ def process_image_with_grok(base64_image: str) -> dict:
 
 def analyze_document_results(results: List[dict]) -> DocumentCheckResult:
     """
-    Analyzes results from the vision model and checks for missing required fields.
+    Analyzes the results from the vision model and checks for missing required fields.
+
+    Args:
+        results (List[dict]): A list of dictionaries containing the analyzed fields from the vision model.
+    
+    Returns:
+        DocumentCheckResult: The analysis results indicating validity, missing fields, and errors.
     """
     required_fields = ["Name", "Date of Birth", "Document Number", "Expiration Date"]
     missing_fields = []
     errors = []
 
-    # Check for missing fields in the document
+    # Validate input structure
+    if not isinstance(results, list):
+        errors.append("Invalid input: 'results' must be a list.")
+        return DocumentCheckResult(is_valid=False, missing_fields=required_fields, errors=errors)
+    
+    if not results:  # Check for empty results
+        missing_fields.extend(required_fields)
+        return DocumentCheckResult(is_valid=False, missing_fields=missing_fields, errors=errors)
+
+    if not all(isinstance(result, dict) for result in results):
+        errors.append("Invalid input: All items in 'results' must be dictionaries.")
+        return DocumentCheckResult(is_valid=False, missing_fields=required_fields, errors=errors)
+
+    # Check for missing required fields in the results
     for field in required_fields:
-        if not any(field in result.get("content", "") for result in results):
+        field_found = any(
+            field.lower() in result.get("content", "").lower() for result in results if "content" in result
+        )
+        if not field_found:
             missing_fields.append(field)
 
     is_valid = len(missing_fields) == 0
+
     return DocumentCheckResult(is_valid=is_valid, missing_fields=missing_fields, errors=errors)
 
 @router.post("/generate-response", response_model=List[str])
