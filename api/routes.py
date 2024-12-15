@@ -153,12 +153,12 @@ def process_image_with_grok(base64_image: str) -> dict:
         logger.error("Error while processing image with Grok Vision model: %s", str(e))
         raise
 
-def analyze_document_results(results: List[dict]) -> DocumentCheckResult:
+def analyze_document_results(results: List[str]) -> DocumentCheckResult:
     """
-    Analyzes the results from the vision model and checks for missing required fields.
+    Analyzes the results from the vision model by using X.AI API to validate required fields.
 
     Args:
-        results (List[dict]): A list of dictionaries containing the analyzed fields from the vision model.
+        results (List[str]): A list of base64-encoded images to analyze.
     
     Returns:
         DocumentCheckResult: The analysis results indicating validity, missing fields, and errors.
@@ -167,31 +167,56 @@ def analyze_document_results(results: List[dict]) -> DocumentCheckResult:
     missing_fields = []
     errors = []
 
-    # Validate input structure
-    if not isinstance(results, list):
-        errors.append("Invalid input: 'results' must be a list.")
-        return DocumentCheckResult(is_valid=False, missing_fields=required_fields, errors=errors)
-    
-    if not results:  # Check for empty results
-        missing_fields.extend(required_fields)
-        return DocumentCheckResult(is_valid=False, missing_fields=missing_fields, errors=errors)
-
-    if not all(isinstance(result, dict) for result in results):
-        errors.append("Invalid input: All items in 'results' must be dictionaries.")
+    if not isinstance(results, list) or not all(isinstance(image, str) for image in results):
+        errors.append("Invalid input: 'results' must be a list of base64-encoded image strings.")
         return DocumentCheckResult(is_valid=False, missing_fields=required_fields, errors=errors)
 
-    # Check for missing required fields in the results
+    extracted_fields = []  # Store extracted fields from all images
+
+    try:
+        for image in results:
+            # Send image to Grok Vision model for analysis
+            response = client.chat.completions.create(
+                model=VISION_MODEL_NAME,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "image_url",
+                                "image_url": {
+                                    "url": f"data:image/jpeg;base64,{image}",
+                                    "detail": "high",
+                                },
+                            },
+                            {
+                                "type": "text",
+                                "text": "Extract all fields present in the document.",
+                            },
+                        ],
+                    }
+                ],
+            )
+
+            # Extract response content and validate
+            vision_output = response.choices[0].message.get("content", {})
+            if isinstance(vision_output, dict) and "fields" in vision_output:
+                extracted_fields.extend(vision_output["fields"])
+            else:
+                errors.append("Invalid response from vision model for one of the images.")
+    except Exception as e:
+        errors.append(f"Error during vision model processing: {str(e)}")
+        return DocumentCheckResult(is_valid=False, missing_fields=required_fields, errors=errors)
+
+    # Check for missing required fields
     for field in required_fields:
-        field_found = any(
-            field.lower() in result.get("content", "").lower() for result in results if "content" in result
-        )
-        if not field_found:
+        if not any(field.lower() in extracted_field.lower() for extracted_field in extracted_fields):
             missing_fields.append(field)
 
     is_valid = len(missing_fields) == 0
 
     return DocumentCheckResult(is_valid=is_valid, missing_fields=missing_fields, errors=errors)
-
+    
 @router.post("/generate-response", response_model=List[str])
 def ask_question(request: QuestionRequest):
     """
