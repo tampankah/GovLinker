@@ -2,6 +2,7 @@ from fastapi import APIRouter, UploadFile, HTTPException
 from pydantic import BaseModel
 from typing import List
 import tempfile
+import logging
 from utils.image_utils import encode_image_to_base64, convert_pdf_to_images, pil_image_to_base64
 import os
 from openai import OpenAI
@@ -20,6 +21,8 @@ client = OpenAI(
 # Define FastAPI router
 router = APIRouter()
 
+# Configure logging
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 # Mock database containing document information
@@ -115,28 +118,40 @@ def process_image_with_grok(base64_image: str) -> dict:
     """
     Sends the base64-encoded image to the vision model for analysis.
     """
-    response = client.chat.completions.create(
-        model=VISION_MODEL_NAME,
-        messages=[
-            {
-                "role": "user",
-                "content": [
-                    {
-                        "type": "image_url",
-                        "image_url": {
-                            "url": f"data:image/jpeg;base64,{base64_image}",
-                            "detail": "high",
+    try:
+        # Send the image to the vision model
+        logger.debug("Sending request to Grok Vision model.")
+        response = client.chat.completions.create(
+            model=VISION_MODEL_NAME,
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/jpeg;base64,{base64_image}",
+                                "detail": "high",
+                            },
                         },
-                    },
-                    {
-                        "type": "text",
-                        "text": "Extract and validate all fields in this document match to headlines?",
-                    },
-                ],
-            }
-        ],
-    )
-    return response.choices[0].message
+                        {
+                            "type": "text",
+                            "text": "Extract and validate all fields in this document match to headlines?",
+                        },
+                    ],
+                }
+            ],
+        )
+
+        # Log the raw response for debugging purposes
+        logger.debug("Received response from Grok Vision model: %s", response)
+
+        # Return the relevant part of the response
+        return response.choices[0].message
+    except Exception as e:
+        # Log any errors that occur during the request
+        logger.error("Error while processing image with Grok Vision model: %s", str(e))
+        raise
 
 def analyze_document_results(results: List[dict]) -> DocumentCheckResult:
     """
