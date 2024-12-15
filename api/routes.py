@@ -116,7 +116,7 @@ async def validate_document(file: UploadFile):
 
 def process_image_with_grok(base64_image: str) -> dict:
     """
-    Sends the base64-encoded image to the vision model for analysis.
+    Sends the base64-encoded image to the Grok Vision model for analysis.
     """
     try:
         # Send the image to the vision model
@@ -136,7 +136,7 @@ def process_image_with_grok(base64_image: str) -> dict:
                         },
                         {
                             "type": "text",
-                            "text": "Extract and validate all fields in this document match to headlines?",
+                            "text": "Extract and validate the fields in this document. Identify required fields and their statuses.",
                         },
                     ],
                 }
@@ -155,21 +155,27 @@ def process_image_with_grok(base64_image: str) -> dict:
 
 def analyze_document_results(results: List[str]) -> DocumentCheckResult:
     """
-    Analyzes the results from the vision model by using X.AI API to validate required fields.
+    Analyzes the results from the vision model, extracting and categorizing required fields.
+    Classifies them into required fields, missing fields, filling fields, and provides guidance to fill them.
 
     Args:
         results (List[str]): A list of base64-encoded images to analyze.
-    
-    Returns:
-        DocumentCheckResult: The analysis results indicating validity, missing fields, and errors.
-    """
-    required_fields = ["Name", "Date of Birth", "Document Number", "Expiration Date"]
-    missing_fields = []
-    errors = []
 
+    Returns:
+        DocumentCheckResult: The analysis results indicating validity, missing fields, errors, and guidance.
+    """
+    missing_fields = []
+    filling_fields = []
+    filled_fields = []
+    required_fields = []  # Grok will decide this
+
+    errors = []
+    field_guidance = []
+
+    # Ensure that the input results are a list of base64-encoded images
     if not isinstance(results, list) or not all(isinstance(image, str) for image in results):
         errors.append("Invalid input: 'results' must be a list of base64-encoded image strings.")
-        return DocumentCheckResult(is_valid=False, missing_fields=required_fields, errors=errors)
+        return DocumentCheckResult(is_valid=False, missing_fields=missing_fields, errors=errors)
 
     extracted_fields = []  # Store extracted fields from all images
 
@@ -191,32 +197,79 @@ def analyze_document_results(results: List[str]) -> DocumentCheckResult:
                             },
                             {
                                 "type": "text",
-                                "text": "Extract all fields present in the document.",
+                                "text": "Identify required fields in the document and their current status. Return required, filled, missing, and partially filled fields.",
                             },
                         ],
                     }
                 ],
             )
 
-            # Extract response content and validate
+            # Extract the response content and validate
             vision_output = response.choices[0].message.get("content", {})
-            if isinstance(vision_output, dict) and "fields" in vision_output:
-                extracted_fields.extend(vision_output["fields"])
+            if isinstance(vision_output, dict):
+                if "required_fields" in vision_output:
+                    required_fields.extend(vision_output["required_fields"])
+                if "fields" in vision_output:
+                    extracted_fields.extend(vision_output["fields"])
             else:
                 errors.append("Invalid response from vision model for one of the images.")
     except Exception as e:
         errors.append(f"Error during vision model processing: {str(e)}")
-        return DocumentCheckResult(is_valid=False, missing_fields=required_fields, errors=errors)
+        return DocumentCheckResult(is_valid=False, missing_fields=missing_fields, errors=errors)
 
-    # Check for missing required fields
+    # Categorize the extracted fields
     for field in required_fields:
-        if not any(field.lower() in extracted_field.lower() for extracted_field in extracted_fields):
+        matching_field = next(
+            (extracted_field for extracted_field in extracted_fields if field.lower() in extracted_field.lower()), 
+            None
+        )
+
+        if matching_field:
+            if 'incomplete' in matching_field.lower():  # If the field is partially filled
+                filling_fields.append(field)
+            else:  # If the field is completely filled
+                filled_fields.append(field)
+        else:
             missing_fields.append(field)
 
+    # Now we will pass missing and filling fields to the text generation model for guidance
+    if missing_fields or filling_fields:
+        try:
+            # Prepare the question for the chat model to generate assistance text
+            missing_or_filling_fields_text = ", ".join(missing_fields + filling_fields)
+            question = f"The following required fields are missing or partially filled: {missing_or_filling_fields_text}. " \
+                       "Can you provide fun and easy ways for the user to fill these fields correctly?"
+
+            # Create a new agent (text generation model) to assist the user
+            response = client.chat.completions.create(
+                model=CHAT_MODEL_NAME,
+                messages=[
+                    {"role": "system", "content": "You are a fun and helpful assistant guiding users to complete their documents in an easy way."},
+                    {"role": "user", "content": question},
+                ],
+            )
+
+            # Extract the generated guidance from the response
+            guidance_message = response.choices[0].message['content']
+            field_guidance.append(guidance_message)  # Add the generated guidance for the user
+
+        except Exception as e:
+            errors.append(f"Error processing with chat model: {str(e)}")
+
+    # Determine if the document is valid (no missing fields)
     is_valid = len(missing_fields) == 0
 
-    return DocumentCheckResult(is_valid=is_valid, missing_fields=missing_fields, errors=errors)
-    
+    # Return the results with field statuses, errors, and any additional guidance
+    return DocumentCheckResult(
+        is_valid=is_valid,
+        required_fields=required_fields,  # Return the dynamically determined required fields
+        missing_fields=missing_fields,
+        filled_fields=filled_fields,
+        filling_fields=filling_fields,
+        errors=errors,
+        field_guidance=field_guidance  # Guidance generated by the text model for filling fields
+    )
+
 @router.post("/generate-response", response_model=List[str])
 def ask_question(request: QuestionRequest):
     """

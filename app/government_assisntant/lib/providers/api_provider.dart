@@ -45,7 +45,7 @@ class ApiProvider with ChangeNotifier {
   }
 
   Future<void> uploadDocument(String filePath) async {
-    var url = Uri.parse('http://127.0.0.1:8000/validate-document'); // Correct endpoint
+    var url = Uri.parse('http://127.0.0.1:8000/validate-document_2'); // Correct endpoint
     try {
       // Inform the user about the upload
       _messages.add(Message(message: 'Uploading document...', isUserMessage: true));
