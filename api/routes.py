@@ -14,7 +14,7 @@ CHAT_MODEL_NAME = "grok-beta"  # Chat model name
 
 # Initialize OpenAI client
 client = OpenAI(
-    api_key="xai-9LwsfkgpVeJm4AkNGSOqHk1vy058TZP15CEP4uzpuzdCKP497zasWSWCUDaGs7cDQoj1Q76tjC7gqCtn",
+    api_key="XAI_API_KEY",
     base_url="https://api.x.ai/v1", 
 )
 
