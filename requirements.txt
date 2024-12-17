@@ -1,13 +1,8 @@
 fastapi
 uvicorn
 pydantic
-requests
 openai
 python-dotenv
 Pillow
 pdf2image
-langchain
 python-multipart
-langchain-community
-sentence-transformers
-PyPDF2
