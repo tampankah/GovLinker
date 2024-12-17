@@ -147,10 +147,6 @@ This project is licensed under the MIT License. See the LICENSE file for details
 
 ---
 
-# Haccative Group
-
-We create AI assistants for government services.
-
 ## Crypto Wallet 💰
 
 If you prefer to donate via cryptocurrency, here is our wallet address:
