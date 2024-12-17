@@ -6,6 +6,10 @@
 
 ---
 
+![DEMO](https://github.com/nesistor/GovGiggler/blob/main/xai9.png)
+![DEMO](https://github.com/nesistor/GovGiggler/blob/main/xai7.png)
+![DEMO2](https://github.com/nesistor/GovGiggler/blob/main/xai8.png)
+
 ## 🚀 Project Vision: Redefining Government Services
 
 **GovLinker** reshapes the interaction with government systems by being:
