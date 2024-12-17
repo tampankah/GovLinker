@@ -8,6 +8,6 @@ Pillow
 pdf2image
 langchain
 python-multipart
-langchain-comunity
+langchain-community
 sentence-transformers
 PyPDF2
