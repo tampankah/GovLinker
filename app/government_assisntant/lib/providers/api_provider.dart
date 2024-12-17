@@ -4,16 +4,17 @@ import 'package:http/http.dart' as http;
 import 'dart:io';
 import 'package:http_parser/http_parser.dart';
 
+import '../models/models.dart';
+
 class ApiProvider with ChangeNotifier {
-  List<Message> _messages = [];
+  final List<Message> _messages = [];
 
   List<Message> get messages => _messages;
 
   Future<void> generateResponse(String question) async {
     var url = Uri.parse('http://127.0.0.1:8000/generate-response');
     try {
-      _messages.add(Message(message: question, isUserMessage: true));
-      notifyListeners();
+      _addMessage(Message(message: question, isUserMessage: true));
 
       var response = await http.post(
         url,
@@ -22,45 +23,38 @@ class ApiProvider with ChangeNotifier {
       );
 
       if (response.statusCode == 200) {
-        var responseBody = utf8.decode(response.bodyBytes); // Decode response as UTF-8
+        var responseBody = utf8.decode(response.bodyBytes);
         var responseData = json.decode(responseBody);
 
-        if (responseData is List) {
-          String serverResponse = responseData.isNotEmpty
-              ? responseData[0]
-              : '';
-          _messages.add(Message(
-              message: serverResponse, isUserMessage: false, isMarkdown: true));
+        if (responseData is List && responseData.isNotEmpty) {
+          String serverResponse = responseData[0];
+          _addMessage(Message(
+            message: serverResponse,
+            isUserMessage: false,
+            isMarkdown: true,
+          ));
         }
-
-        notifyListeners();
       } else {
         throw Exception('Failed to load response');
       }
     } catch (e) {
-      print('Error occurred: $e');
-      throw Exception('Failed to send request');
+      _addMessage(Message(
+        message: 'Error: $e',
+        isUserMessage: false,
+      ));
     }
   }
 
   Future<void> uploadDocument(String filePath) async {
-    var url = Uri.parse('http://127.0.0.1:8000/validate-document'); // Updated endpoint
+    var url = Uri.parse('http://127.0.0.1:8000/validate-document');
     try {
-      // Inform the user about the upload
-      _messages.add(Message(message: 'Uploading document...', isUserMessage: true));
-      notifyListeners();
+      _addMessage(Message(
+        message: 'Uploading document...',
+        isUserMessage: true,
+      ));
 
-      // Detect the file's MIME type
-      String mimeType = '';
-      if (filePath.endsWith('.pdf')) {
-        mimeType = 'application/pdf';
-      } else if (filePath.endsWith('.docx')) {
-        mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
-      } else {
-        throw Exception('Unsupported file type. Only PDF and DOCX are allowed.');
-      }
+      String mimeType = _detectMimeType(filePath);
 
-      // Create a multipart request with correct headers
       var request = http.MultipartRequest('POST', url);
       request.files.add(await http.MultipartFile.fromPath(
         'file',
@@ -68,58 +62,53 @@ class ApiProvider with ChangeNotifier {
         contentType: MediaType.parse(mimeType),
       ));
 
-      // Send the request and wait for the response
       var streamedResponse = await request.send();
       var response = await http.Response.fromStream(streamedResponse);
 
       if (response.statusCode == 200) {
-        // Decode the response and display the result
         var responseBody = utf8.decode(response.bodyBytes);
         var responseData = json.decode(responseBody);
 
-        // Assuming the response contains a 'content' key with the full document validation message
         String resultMessage = responseData['content'] ?? 'No content available';
-
-        // Add the result message to the chat
-        _messages.add(Message(
+        _addMessage(Message(
           message: resultMessage,
           isUserMessage: false,
-          isMarkdown: true, // Mark as markdown to render properly
+          isMarkdown: true,
         ));
       } else if (response.statusCode == 400) {
-        // Handle unsupported file type error
         var responseBody = utf8.decode(response.bodyBytes);
         var responseData = json.decode(responseBody);
 
-        _messages.add(Message(
+        _addMessage(Message(
           message: responseData['detail'] ?? 'Unsupported file type.',
           isUserMessage: false,
         ));
       } else {
-        // Handle other errors
-        _messages.add(Message(
+        _addMessage(Message(
           message: 'Document upload failed: ${response.reasonPhrase}',
           isUserMessage: false,
         ));
       }
-
-      notifyListeners();
     } catch (e) {
-      // Handle unexpected errors
-      print('Error occurred: $e');
-      _messages.add(Message(
-        message: e.toString(),
+      _addMessage(Message(
+        message: 'Error occurred: $e',
         isUserMessage: false,
       ));
-      notifyListeners();
     }
   }
-}
 
-class Message {
-  final String message;
-  final bool isUserMessage;
-  final bool isMarkdown;
+  void _addMessage(Message message) {
+    _messages.add(message);
+    notifyListeners();
+  }
 
-  Message({required this.message, required this.isUserMessage, this.isMarkdown = false});
+  String _detectMimeType(String filePath) {
+    if (filePath.endsWith('.pdf')) {
+      return 'application/pdf';
+    } else if (filePath.endsWith('.docx')) {
+      return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+    } else {
+      throw Exception('Unsupported file type. Only PDF and DOCX are allowed.');
+    }
+  }
 }

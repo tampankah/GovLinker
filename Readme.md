@@ -134,7 +134,8 @@ We welcome contributions to **GovLinker**! Please follow these steps:
 6. **Open a Pull Request (PR)** in the original repository.
 ---
 
-![DEMO](https://github.com/nesistor/GovGiggler/blob/main/xai5.png)
+![DEMO](https://github.com/nesistor/GovGiggler/blob/main/xai7.png)
+![DEMO2](https://github.com/nesistor/GovGiggler/blob/main/xai8.png)
 
 ## 📄 **License**
 

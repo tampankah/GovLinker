@@ -99,8 +99,9 @@ def process_image_with_grok(base64_image: str) -> dict:
                         },
                         {
                             "type": "text",
-                            "text": "Extract and validate the fields in this document. Identify required fields and their statuses.",
-                        },
+                            "text": "Analyze this document and extract all fields. Split the output into two categories: 'completed_fields' and 'empty_fields'. For 'completed_fields', include the 'field_name' and the 'field_value'. For 'empty_fields', include only the 'field_name'. Additionally, identify and validate required fields, and include their statuses (e.g., 'filled' or 'missing') in the response. Return the results in a clear JSON format structured as follows:\n{\n  \"completed_fields\": [\n    { \"field_name\": \"<field_label>\", \"field_value\": \"<value_entered>\" }\n  ],\n  \"empty_fields\": [\n    { \"field_name\": \"<field_label>\" }\n  ],\n  \"required_field_statuses\": [\n    { \"field_name\": \"<field_label>\", \"status\": \"filled\" or \"missing\" }\n  ]\n}"
+                        }
+
                     ],
                 }
             ],
@@ -165,7 +166,7 @@ def process_document_with_text_model(aggregated_results: list) -> dict:
         response = client.chat.completions.create(
             model=CHAT_MODEL_NAME,  # Chat model name
             messages=[
-                {"role": "system", "content": "You are a helpful assistant guiding users to complete their documents."},
+                {"role": "system", "content": "You are a helpful, friendly, and clear assistant with expertise in analyzing and solving form-related issues. Your task is to provide users with personalized guidance based on the following extracted form data:\n\n1. **Completed Fields**:\n   These are the fields that the user has already filled out:\n   ```\n   {completed_fields}\n   ```\n   - Acknowledge the user's effort in completing these fields.\n   - Verify if the values provided are logical or valid based on common form standards.\n\n2. **Empty Fields**:\n   These are the fields that the user has not yet filled out:\n   ```\n   {empty_fields}\n   ```\n   - For each empty field, explain why this field is important and what information is required.\n   - Provide clear instructions on how to complete each field.\n   - If applicable, include examples or tips to help the user fill out the field accurately.\n\n3. **Required Field Statuses**:\n   Validation results of required fields:\n   ```\n   {required_field_statuses}\n   ```\n   - Identify required fields that are still missing or incomplete.\n   - Prioritize missing required fields and provide step-by-step guidance to address these issues.\n\n### **Output Structure**:\n- Start with a friendly acknowledgment of the user's effort.\n- Highlight the completed fields and confirm their validity (if relevant).\n- Provide a detailed step-by-step guide for each empty field, prioritizing required fields marked as 'missing'.\n- Use a helpful, supportive tone and add examples where appropriate.\n- End with a motivational statement encouraging the user to complete the remaining fields.\n\n### Example Output:\n\"Great work filling out the form so far! Here's what I noticed:\n\n✅ **Completed Fields**:\n- **Full Name**: John Doe\n- **Date of Birth**: 1990-01-01\n   These fields look good!\n\n⚠️ **Fields That Need Your Attention**:\n- **Email Address**: This is missing. Please enter your email address, e.g., john.doe@example.com, so we can contact you if needed.\n- **Phone Number**: This is empty. Add a phone number in this format: (123) 456-7890.\n\n🚨 **Required Fields Missing**:\n- **Address**: This field is critical for processing your request. Enter your full mailing address, such as '123 Main St, Springfield, IL 12345'.\n\nKeep going! You're almost there—let's finish strong! 📝\"\n\nNow generate tailored and supportive help text for the user based on the provided data."},
                 {"role": "user", "content": document_context},
             ],
         )
