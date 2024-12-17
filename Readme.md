@@ -147,5 +147,19 @@ This project is licensed under the MIT License. See the LICENSE file for details
 
 ---
 
+# Haccative Group
+
+We create AI assistants for government services.
+
+## Crypto Wallet 💰
+
+If you prefer to donate via cryptocurrency, here is our wallet address:
+
+
+**Ethereum (ETH):**
+`0x97aE86a5e4b434ec0bEd6A82EE2A079C938886dA`
+
+Thank you for your support!
+
 GovLinker is designed to revolutionize bureaucratic processes and leave a lasting impact on users and stakeholders alike.
 
