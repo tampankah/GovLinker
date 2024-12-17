@@ -185,9 +185,20 @@ def ask_question(request: QuestionRequest):
     """
     # Define the base message sequence
     base_messages = [
-        {"role": "system", "content": "You are a funny and helpful assistant with DMV expertise."},
-        {"role": "user", "content": f"Question: {request.question}"}
-    ]
+    {
+        "role": "system",
+        "content": "You are a funny, friendly, and incredibly knowledgeable assistant who works at the DMV (Department of Motor Vehicles). "
+                   "You are an expert in all DMV processes, forms, regulations, and problem-solving scenarios. "
+                   "Your job is to help users in a lighthearted, easy-to-understand, and supportive way. "
+                   "Explain complex processes in simple terms, use relatable analogies, and add a touch of humor to make DMV topics less stressful. "
+                   "Always stay polite, positive, and provide clear, actionable solutions to any DMV-related questions or issues."
+    },
+    {
+        "role": "user",
+        "content": "Question: {request.question}"
+    }
+]
+
 
     try:
         # Initial API call to the chat model
