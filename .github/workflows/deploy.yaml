@@ -19,13 +19,17 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: 'stable'
+          flutter-version: 'stable'  # Lub podaj konkretną wersję np. '3.7.0'
 
       - name: Build Flutter Web App
         working-directory: app/government_assistant
         run: |
           flutter pub get
           flutter build web --release
+
+      - name: Verify Flutter installation
+        run: |
+          flutter --version
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -75,10 +79,10 @@ jobs:
         with:
           credentials_json: ${{ secrets.GCP_CREDENTIALS }}
 
-      # Deploy Flutter Web App
+      # Deploy Flutter Web App to Google Cloud Storage
       - name: Deploy Flutter Web App to Google Cloud Storage
         run: |
-          gsutil -m rsync -R app/government_assistant/build/web gs://government-assistnat-bucket-name
+          gsutil -m rsync -R app/government_assistant/build/web gs://government-assistant-bucket-name  # Poprawiona nazwa bucketa
 
       # Deploy API
       - name: Deploy to Cloud Run (government-assistant-api)
