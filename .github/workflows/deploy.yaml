@@ -27,6 +27,8 @@ jobs:
           cd app  # Przechodzimy do katalogu z aplikacją Flutter
           flutter pub get
           flutter build web --release
+          # Ensure build/web directory exists
+          ls -R build/web  # This will verify if the output exists
 
       - name: Verify Flutter installation
         run: |
@@ -78,12 +80,16 @@ jobs:
       - name: Authenticate to GCP
         uses: google-github-actions/auth@v1
         with:
-      
           credentials_json: ${{ secrets.GCP_CREDENTIALS }}
       
+      # Verify build/web exists before deploying
       - name: Verify build/web exists
         run: |
-          ls -R app/build/web
+          if [ ! -d "app/build/web" ]; then
+            echo "Error: build/web directory does not exist"
+            exit 1
+          fi
+          echo "Directory app/build/web exists, proceeding with deployment."
 
       # Deploy Flutter Web App to Google Cloud Storage
       - name: Deploy Flutter Web App to Google Cloud Storage
