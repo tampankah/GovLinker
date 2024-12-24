@@ -1,3 +1,4 @@
+
 resource "google_artifact_registry_repository" "docker_repo" {
   repository_id = var.repo_name
   format       = "DOCKER"
@@ -12,11 +13,7 @@ resource "google_cloud_run_service" "api_service" {
   template {
     spec {
       containers {
-        image = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.docker_repo.name}/${var.image_name}"
-        env {
-          name  = "XAI_API_KEY"
-          value = var.xai_api_key
-        }
+        image = "gcr.io/google-containers/pause:3.1" # Tymczasowy obraz (minimalny).
       }
     }
   }
