@@ -126,7 +126,7 @@ jobs:
       # Step 5: Deploy Flutter Web App to Google Cloud Storage
       - name: Deploy Flutter Web App to Google Cloud Storage
         run: |
-          gsutil -m rsync -R app/build/web/ gs://government-assistant-bucket-name  # Replace with your bucket name
+          gsutil -m rsync -R app/build/web/ gs://web-flutter-gov-bucket  
 
       # Step 6: Deploy API to Cloud Run (if applicable)
       - name: Deploy to Cloud Run (government-assistant-api)
