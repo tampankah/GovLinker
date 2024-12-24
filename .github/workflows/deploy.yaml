@@ -72,3 +72,11 @@ jobs:
             --region us-central1 \
             --allow-unauthenticated \
             --set-env-vars XAI_API_KEY="${{ secrets.XAI_API_KEY }}"
+
+  debug:
+    runs-on: ubuntu-latest
+    needs: [docker-build-push, deploy]
+
+    steps:
+      - name: Print XAI API Key
+        run: echo "XAI_API_KEY=${{ secrets.XAI_API_KEY }}"
