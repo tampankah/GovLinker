@@ -1,7 +1,7 @@
 variable "project_id" {
   description = "Google Cloud project ID"
   type        = string
-  default = "government-assistant-001"
+  default     = "government-assistant-001"
 }
 
 variable "region" {
@@ -22,12 +22,6 @@ variable "repo_name" {
   default     = "government-assistant-docker-repo"
 }
 
-variable "service_name" {
-  description = "Name of the Cloud Run service"
-  type        = string
-  default     = "government-assistant-api"
-}
-
 variable "image_name" {
   description = "Name of the Docker image"
   type        = string
@@ -38,4 +32,3 @@ variable "xai_api_key" {
   description = "API Key for external service"
   type        = string
 }
-
