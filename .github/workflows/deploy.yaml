@@ -105,6 +105,9 @@ jobs:
         uses: google-github-actions/auth@v1
         with:
           credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+      - name: Verify GCP authentication
+        run: gcloud auth list
+        
 
       # Step 3: Download the flutter-web-build artifact from the build job
       - name: Download Flutter Web build artifact
