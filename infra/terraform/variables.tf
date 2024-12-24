@@ -32,3 +32,8 @@ variable "xai_api_key" {
   description = "API Key for external service"
   type        = string
 }
+
+variable "frontend_bucket_name" {
+  description = "Nazwa bucketa do hostowania aplikacji frontendowej"
+  type        = string
+}
