@@ -24,11 +24,20 @@ jobs:
       # Build Flutter Web App
       - name: Build Flutter Web App
         run: |
-          cd app  # Przechodzimy do katalogu z aplikacją Flutter
+          cd app  # Change to the app directory
           flutter pub get
           flutter build web --release
-          # Ensure build/web directory exists
-          ls -R build/web  # This will verify if the output exists
+          
+          # Verify if build/web exists
+          echo "Listing the contents of the build directory:"
+          ls -R build  # This will list the contents of the build directory
+
+          # Check if the web directory exists after the build
+          if [ ! -d "build/web" ]; then
+            echo "Error: build/web directory does not exist"
+            exit 1
+          fi
+          echo "Flutter Web build completed successfully, build/web directory exists."
 
       - name: Verify Flutter installation
         run: |
@@ -86,6 +95,8 @@ jobs:
       - name: Verify build/web exists
         run: |
           cd app  # Ensure we're in the correct directory
+          echo "Listing the contents of the build directory inside app:"
+          ls -R build  # List contents of the build directory to confirm if `web` exists
           if [ ! -d "build/web" ]; then
             echo "Error: build/web directory does not exist"
             exit 1
