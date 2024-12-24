@@ -83,7 +83,7 @@ jobs:
       # Deploy Flutter Web App to Google Cloud Storage
       - name: Deploy Flutter Web App to Google Cloud Storage
         run: |
-          gsutil -m rsync -R app/government_assistant/build/web gs://government-assistant-bucket-name  # Poprawiona nazwa bucketa
+          gsutil -m rsync -R app/build/web gs://government-assistant-bucket-name  # Poprawiona nazwa bucketa
 
       # Deploy API
       - name: Deploy to Cloud Run (government-assistant-api)
