@@ -13,41 +13,49 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Step 1: Checkout the code
       - name: Checkout code
         uses: actions/checkout@v3
 
+      # Step 2: Set up Flutter environment
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.27.0'
 
-      # Build Flutter Web App
+      # Step 3: Build Flutter Web App
       - name: Build Flutter Web App
         run: |
           cd app  # Change to the app directory
           flutter pub get
           flutter build web --release
-          
-          # Verify if build/web exists
-          echo "Listing the contents of the build directory:"
-          ls -R build  # This will list the contents of the build directory
 
-          # Check if the web directory exists after the build
+          # Verify if the build/web directory exists after the build
           if [ ! -d "build/web" ]; then
             echo "Error: build/web directory does not exist"
             exit 1
           fi
           echo "Flutter Web build completed successfully, build/web directory exists."
 
+      # Step 4: Upload the build/web directory as an artifact for later use
+      - name: Upload build/web as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: flutter-web-build
+          path: app/build/web  # Path to the built web directory
+
+      # Step 5: Verify Flutter installation
       - name: Verify Flutter installation
         run: |
           flutter --version
 
+      # Step 6: Set up Python environment for API dependencies (if needed)
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
 
+      # Step 7: Install API dependencies (if needed)
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
@@ -58,22 +66,27 @@ jobs:
     needs: build
 
     steps:
+      # Step 1: Checkout the code again in this job
       - name: Checkout code
         uses: actions/checkout@v3
 
+      # Step 2: Authenticate to Google Cloud Platform (GCP)
       - name: Authenticate to GCP
         uses: google-github-actions/auth@v1
         with:
           credentials_json: ${{ secrets.GCP_CREDENTIALS }}
 
+      # Step 3: Configure Docker for pushing images to GCP
       - name: Configure Docker
         run: |
           gcloud auth configure-docker us-central1-docker.pkg.dev
 
+      # Step 4: Build Docker image for the API
       - name: Build Docker image for government-assistant-api
         run: |
           docker build -t us-central1-docker.pkg.dev/government-assistant-001/government-assistant-docker-repo/government-assistant-api -f Dockerfile .
 
+      # Step 5: Push Docker images to Google Container Registry (GCR)
       - name: Push Docker images
         run: |
           docker push us-central1-docker.pkg.dev/government-assistant-001/government-assistant-docker-repo/government-assistant-api
@@ -83,32 +96,39 @@ jobs:
     needs: docker-build-push
 
     steps:
+      # Step 1: Checkout the code again in the deploy job
       - name: Checkout code
         uses: actions/checkout@v3
 
+      # Step 2: Authenticate to Google Cloud Platform (GCP)
       - name: Authenticate to GCP
         uses: google-github-actions/auth@v1
         with:
           credentials_json: ${{ secrets.GCP_CREDENTIALS }}
-      
-      # Corrected the path to check for build/web inside the 'app' directory
+
+      # Step 3: Download the flutter-web-build artifact from the build job
+      - name: Download Flutter Web build artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: flutter-web-build
+          path: app/build/web  # Path to where the build/web directory should be downloaded
+
+      # Step 4: Verify the build/web directory exists after download
       - name: Verify build/web exists
         run: |
           cd app  # Ensure we're in the correct directory
-          echo "Listing the contents of the build directory inside app:"
-          ls -R build  # List contents of the build directory to confirm if `web` exists
           if [ ! -d "build/web" ]; then
             echo "Error: build/web directory does not exist"
             exit 1
           fi
           echo "Directory app/build/web exists, proceeding with deployment."
 
-      # Deploy Flutter Web App to Google Cloud Storage
+      # Step 5: Deploy Flutter Web App to Google Cloud Storage
       - name: Deploy Flutter Web App to Google Cloud Storage
         run: |
-          gsutil -m rsync -R app/build/web/ gs://government-assistant-bucket-name  # Poprawiona nazwa bucketa
+          gsutil -m rsync -R app/build/web/ gs://government-assistant-bucket-name  # Replace with your bucket name
 
-      # Deploy API
+      # Step 6: Deploy API to Cloud Run (if applicable)
       - name: Deploy to Cloud Run (government-assistant-api)
         env:
           XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
