@@ -24,7 +24,7 @@ jobs:
       # Build Flutter Web App
       - name: Build Flutter Web App
         run: |
-          cd app/government_assistant  # Przechodzimy do katalogu z aplikacją Flutter
+          cd app  # Przechodzimy do katalogu z aplikacją Flutter
           flutter pub get
           flutter build web --release
 
