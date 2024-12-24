@@ -50,7 +50,7 @@ class DocumentCheckResult(BaseModel):
     missing_fields: List[str]  # List of missing fields in the document
     errors: List[str]  # List of validation errors
 
-class QuestionRequest(BaseModel):
+class QuestionRequest(BaseModel):   
     """
     Model representing the user question in the /generate-response endpoint.
     """
