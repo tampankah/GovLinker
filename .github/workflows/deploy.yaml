@@ -19,11 +19,12 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.27.0'  # Lub podaj konkretną wersję np. '3.7.0'
+          flutter-version: '3.27.0'
 
+      # Build Flutter Web App
       - name: Build Flutter Web App
-        working-directory: app/government_assistant
         run: |
+          cd app/government_assistant  # Przechodzimy do katalogu z aplikacją Flutter
           flutter pub get
           flutter build web --release
 
