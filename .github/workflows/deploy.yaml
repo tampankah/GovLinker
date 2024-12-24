@@ -82,10 +82,11 @@ jobs:
         with:
           credentials_json: ${{ secrets.GCP_CREDENTIALS }}
       
-      # Verify build/web exists before deploying
+      # Corrected the path to check for build/web inside the 'app' directory
       - name: Verify build/web exists
         run: |
-          if [ ! -d "app/build/web" ]; then
+          cd app  # Ensure we're in the correct directory
+          if [ ! -d "build/web" ]; then
             echo "Error: build/web directory does not exist"
             exit 1
           fi
