@@ -64,11 +64,17 @@ jobs:
         with:
           credentials_json: ${{ secrets.GCP_CREDENTIALS }}
 
+      # Set environment variable for deployment
+      - name: Export XAI_API_KEY as environment variable
+        run: echo "XAI_API_KEY=${{ secrets.XAI_API_KEY }}" >> $GITHUB_ENV
+
       - name: Deploy to Cloud Run (government-assistant-api)
+        env:
+          XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
         run: |
           gcloud run deploy government-assistant-api \
             --image us-central1-docker.pkg.dev/government-assistant-001/government-assistant-docker-repo/government-assistant-api \
             --platform managed \
             --region us-central1 \
             --allow-unauthenticated \
-            --update-env-vars XAI_API_KEY="${{ secrets.XAI_API_KEY }}"
+            --update-env-vars XAI_API_KEY=$XAI_API_KEY
