@@ -78,12 +78,17 @@ jobs:
       - name: Authenticate to GCP
         uses: google-github-actions/auth@v1
         with:
+      
           credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+      
+      - name: Verify build/web exists
+        run: |
+          ls -R app/build/web
 
       # Deploy Flutter Web App to Google Cloud Storage
       - name: Deploy Flutter Web App to Google Cloud Storage
         run: |
-          gsutil -m rsync -R app/build/web gs://government-assistant-bucket-name  # Poprawiona nazwa bucketa
+          gsutil -m rsync -R app/build/web/ gs://government-assistant-bucket-name  # Poprawiona nazwa bucketa
 
       # Deploy API
       - name: Deploy to Cloud Run (government-assistant-api)
