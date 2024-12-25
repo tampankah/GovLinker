@@ -4,5 +4,5 @@ FROM nginx:latest
 # Copy Flutter build files to the Nginx server's web directory
 COPY build/web /usr/share/nginx/html
 
-# Expose port 80 for the web server
-EXPOSE 80
+# Expose port 8080 for the web server
+EXPOSE 8080
