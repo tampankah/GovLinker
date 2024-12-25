@@ -1,7 +1,8 @@
-FROM nginx:alpine  # Use a lightweight Nginx image
+# Base image with web server
+FROM nginx:latest
 
-# Copy the Flutter web build files
-COPY build/web /usr/share/nginx/html 
+# Copy Flutter build files to the Nginx server's web directory
+COPY build/web /usr/share/nginx/html
 
-# Expose port 80 (default for web servers)
+# Expose port 80 for the web server
 EXPOSE 80
