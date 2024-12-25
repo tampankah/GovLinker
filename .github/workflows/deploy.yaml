@@ -106,22 +106,15 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-      # Configure gcloud CLI
+
+      # Configure gcloud CLI THe Best!
       - name: Configure gcloud CLI
         uses: google-github-actions/setup-gcloud@v0
         with:
           service_account_email: ${{ secrets.GCP_SA_EMAIL }}
           service_account_key: ${{ secrets.GCP_SA_KEY }}
           project_id: government-assistant-001
-          
-      # Authenticate to GCP
-      #- name: Authenticate to GCP
-       # uses: google-github-actions/auth@v1
-        #with:
-         # credentials_json: ${{ secrets.GCP_CREDENTIALS }}
-          #create_credentials_file: true
-          #export_environment_variables: true
-
+   
       # Debug: List app directory contents
       - name: List files in app directory
         run: |
@@ -132,7 +125,7 @@ jobs:
         run: |
           set -e
           echo "Syncing files to GCS bucket..."
-          gsutil -m rsync -R app/web/ gs://web-flutter-gov-bucket/ || {
+          gsutil -m rsync -R build/app/web/ gs://web-flutter-gov-bucket/ || {
             echo "Failed to sync files to GCS bucket. Ensure the service account has sufficient permissions.";
             exit 1;
           }
