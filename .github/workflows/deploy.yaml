@@ -76,6 +76,15 @@ jobs:
         with:
           credentials_json: ${{ secrets.GCP_CREDENTIALS }}
 
+      # Debug to check authentication
+      - name: Verify GCP Authentication
+        run: |
+          echo "Checking if the account is authenticated..."
+          gcloud auth list
+          gcloud config list
+          echo "Current active account:"
+          gcloud auth print-access-token
+          
       # Step 3: Configure Docker for pushing images to GCP
       - name: Configure Docker
         run: |
@@ -105,13 +114,6 @@ jobs:
          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
          create_credentials_file: true
          export_environment_variables: true
-
-      - name: Debug environment variables
-        run: |
-          echo "GOOGLE_APPLICATION_CREDENTIALS=$GOOGLE_APPLICATION_CREDENTIALS"
-          echo "Checking if service account has the right permissions..."
-          gcloud iam service-accounts describe ci-cd-service-account@government-assistant-001.iam.gserviceaccount.com
-          
 
       # Debug to check authentication
       - name: Verify GCP Authentication
