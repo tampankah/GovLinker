@@ -104,7 +104,7 @@ jobs:
       - name: Authenticate to GCP
         uses: google-github-actions/auth@v1
         with:
-          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+          credentials_json: $GOOGLE_APPLICATION_CREDENTIALS
       - name: Verify GCP authentication
         run: gcloud auth list
         
