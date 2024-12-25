@@ -22,7 +22,7 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.27.0' 
+          flutter-version: '3.27.0'
 
       - name: Build Flutter Web App
         run: |
@@ -68,7 +68,10 @@ jobs:
 
       - name: Build Docker image for Flutter web app
         run: |
-          docker build -t us-central1-docker.pkg.dev/government-assistant-001/government-assistant-docker-repo/flutter-web-app -f Dockerfile.web .
+          docker build \
+            --build-arg PORT=80 \  # Add PORT as a build argument
+            -t us-central1-docker.pkg.dev/government-assistant-001/government-assistant-docker-repo/flutter-web-app \
+            -f Dockerfile.web .
 
       - name: Push Docker images
         run: |
@@ -111,8 +114,3 @@ jobs:
             --platform managed \
             --region us-central1 \
             --allow-unauthenticated
-            --set-env-vars PORT=
-            --port 80
-            --no-cpu-throttling
-            --timeout 300 
-            
