@@ -132,6 +132,7 @@ jobs:
       # Debug: List downloaded files
       - name: List downloaded files
         run: |
+          cd /home/runner/work/GovLinker/GovLinker  # Change to the correct directory
           ls -R flutter-web-build
 
       # Step 2: Sync build/web directory to Google Cloud Storage (GCS)
