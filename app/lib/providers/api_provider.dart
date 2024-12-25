@@ -12,7 +12,7 @@ class ApiProvider with ChangeNotifier {
   List<Message> get messages => _messages;
 
   Future<void> generateResponse(String question) async {
-    var url = Uri.parse('http://127.0.0.1:8000/generate-response');
+    var url = Uri.parse('https://government-assistant-api-183025368636.us-central1.run.app/generate-response');
     try {
       _addMessage(Message(message: question, isUserMessage: true));
 
@@ -46,7 +46,7 @@ class ApiProvider with ChangeNotifier {
   }
 
   Future<void> uploadDocument(String filePath) async {
-    var url = Uri.parse('http://127.0.0.1:8000/validate-document');
+    var url = Uri.parse('http://government-assistant-api-183025368636.us-central1.run.app/validate-document');
     try {
       _addMessage(Message(
         message: 'Uploading document...',
