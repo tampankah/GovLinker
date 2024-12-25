@@ -1,10 +1,13 @@
-# Base image with web server
-FROM nginx:alpine
+FROM python:3.9-slim-buster
 
-# Copy Flutter build files to the Nginx server's web directory
-COPY build/web /usr/share/nginx/html
+WORKDIR /app
 
-# Expose port 8080 for the web server
+# Copy Flutter build files
+COPY build/web /app
+
+
+# Expose port 8080
 EXPOSE 8080
 
-CMD ["nginx", "-g", "daemon off;"] 
+# Run the Python web server
+CMD ["python", "-m", "http.server", "8080"]

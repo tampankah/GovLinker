@@ -28,7 +28,7 @@ jobs:
         run: |
           cd app
           flutter pub get
-          flutter build web
+          flutter build web --release
 
           # Verify build success
           if [ ! -d "build/web" ]; then
