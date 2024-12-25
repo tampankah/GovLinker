@@ -16,20 +16,17 @@ jobs:
       id-token: write 
 
     steps:
-      # Step 1: Checkout the code
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Step 2: Set up Flutter environment
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.27.0'
+          flutter-version: '3.7.12' # Updated to latest stable version
 
-      # Step 3: Build Flutter Web App
       - name: Build Flutter Web App
         run: |
-          cd app  # Change to the app directory
+          cd app
           flutter pub get
           flutter build web --release
 
@@ -40,29 +37,11 @@ jobs:
           fi
           echo "Flutter Web build completed successfully, build/web directory exists."
 
-      # Step 4: Upload the build/web directory as an artifact for later use
       - name: Upload build/web as artifact
         uses: actions/upload-artifact@v3
         with:
           name: flutter-web-build
-          path: app/build/web  # Path to the built web directory
-  
-      # Step 5: Verify Flutter installation
-      - name: Verify Flutter installation
-        run: |
-          flutter --version
-
-      # Step 6: Set up Python environment for API dependencies (if needed)
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-
-      # Step 7: Install API dependencies (if needed)
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          path: app/build/web
 
   docker-build-push:
     runs-on: ubuntu-latest
@@ -72,36 +51,22 @@ jobs:
       id-token: write
 
     steps:
-      # Step 1: Checkout the code again in this job
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Step 2: Authenticate to Google Cloud Platform (GCP)
       - name: Authenticate to GCP
         uses: google-github-actions/auth@v1
         with:
-          credentials_json: ${{ secrets.GCP_CREDENTIALS }}  # If you still need this step, otherwise remove it
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
 
-      # Debug to check authentication
-      - name: Verify GCP Authentication
-        run: |
-          echo "Checking if the account is authenticated..."
-          gcloud auth list
-          gcloud config list
-          echo "Current active account:"
-          gcloud auth print-access-token
-
-      # Step 3: Configure Docker for pushing images to GCP
       - name: Configure Docker
         run: |
           gcloud auth configure-docker us-central1-docker.pkg.dev
 
-      # Step 4: Build Docker image for the API
       - name: Build Docker image for government-assistant-api
         run: |
           docker build -t us-central1-docker.pkg.dev/government-assistant-001/government-assistant-docker-repo/government-assistant-api -f Dockerfile .
 
-      # Step 5: Push Docker images to Google Container Registry (GCR)
       - name: Push Docker images
         run: |
           docker push us-central1-docker.pkg.dev/government-assistant-001/government-assistant-docker-repo/government-assistant-api
@@ -124,28 +89,20 @@ jobs:
           workload_identity_provider: 'projects/183025368636/locations/global/workloadIdentityPools/github-actions-pool/providers/github-actions-provider' 
           service_account: 'ci-cd-service-account@government-assistant-001.iam.gserviceaccount.com'
 
-      # Step 1: Download the Flutter Web build artifact
       - name: Download flutter-web-build artifact
         uses: actions/download-artifact@v3
         with:
           name: flutter-web-build
-      
+          path: flutter-web-build # Specify download path
+
       - name: List downloaded files
         run: |
           ls -R flutter-web-build 
-          
 
-      # Step 2: Sync build/web directory to Google Cloud Storage (GCS)
       - name: Deploy Flutter Web App to Google Cloud Storage
         run: |
-          set -e
-          echo "Syncing files to GCS bucket..."
-          gsutil -m rsync -R flutter-web-build/ gs://web-flutter-gov-bucket/ || {
-            echo "Failed to sync files to GCS bucket. Ensure the service account has sufficient permissions.";
-            exit 1;
-          }
+          gsutil -m rsync -R flutter-web-build/ gs://web-flutter-gov-bucket/
 
-      # Step 3: Deploy API to Cloud Run (if applicable)
       - name: Deploy to Cloud Run (government-assistant-api)
         env:
           XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
