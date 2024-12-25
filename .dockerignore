@@ -7,4 +7,3 @@ __pycache__
 *.md
 node_modules
 *.sqlite3
-app/*
