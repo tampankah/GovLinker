@@ -50,12 +50,12 @@ jobs:
       - name: Verify artifact upload
         run: |
           echo "Checking for uploaded artifact..."
-          gh run download -n flutter-web-build --repo ${{ github.repository }} --artifact ${{ github.run_id }} 
+          gh run download -n flutter-web-build --repo ${{ github.repository }} --run ${{ github.run_id }} 
           if [ $? -ne 0 ]; then
             echo "Error: Artifact 'flutter-web-build' not found."
             exit 1
           fi
-
+  
       # Step 5: Verify Flutter installation
       - name: Verify Flutter installation
         run: |
