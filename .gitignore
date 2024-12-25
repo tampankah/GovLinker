@@ -15,17 +15,7 @@ venv/*
 
 __pycache__
 
-/app/government_assisntant/.dart_tool/
 
-/app/government_assisntant/.idea/
-/app/government_assisntant/*.iml
-
-/app/government_assisntant/android/
-/app/government_assisntant/ios/
-/app/government_assisntant/macos/
-/app/government_assisntant/linux/
-/app/government_assisntant/web/
-/app/government_assisntant/windows/
 
 .idea/*
 
