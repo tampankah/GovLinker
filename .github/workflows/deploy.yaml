@@ -129,12 +129,6 @@ jobs:
           echo "Contents of app/build/web:"
           ls -l app/build/web
         
-      - name: Test Google Cloud credentials
-        run: |
-          gcloud auth activate-service-account --key-file=/tmp/gcp-credentials.json
-          gcloud config set project ${{ secrets.GCP_PROJECT }}
-          gsutil ls gs://web-flutter-gov-bucket/ || { echo "Error: Unable to access bucket gs://web-flutter-gov-bucket/."; exit 1; }     
-          
       - name: Verify GCS bucket access
         run: |
           gsutil ls gs://web-flutter-gov-bucket || { echo "Error: Unable to access bucket gs://web-flutter-gov-bucket/."; exit 1; }
