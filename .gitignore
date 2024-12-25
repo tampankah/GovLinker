@@ -27,3 +27,6 @@ __pycache__
 /app/government_assisntant/linux/
 /app/government_assisntant/web/
 /app/government_assisntant/windows/
+
+.idea/*
+
