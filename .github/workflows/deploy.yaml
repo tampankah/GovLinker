@@ -13,31 +13,31 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      id-token: write 
+      id-token: write
 
     steps:
-      - name: Checkout code
+      - name: Checkout Code
         uses: actions/checkout@v3
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.27.0' 
+          flutter-version: '3.27.0'
 
       - name: Build Flutter Web App
         run: |
           cd app
           flutter pub get
-          flutter build web 
+          flutter build web
 
-          # Verify if the build/web directory exists after the build
+          # Verify build success
           if [ ! -d "build/web" ]; then
             echo "Error: build/web directory does not exist"
             exit 1
           fi
-          echo "Flutter Web build completed successfully, build/web directory exists."
+          echo "Flutter Web build completed successfully."
 
-      - name: Upload build/web as artifact
+      - name: Upload Build Artifact
         uses: actions/upload-artifact@v3
         with:
           name: flutter-web-build
@@ -49,32 +49,42 @@ jobs:
     permissions:
       contents: read
       id-token: write
+
     steps:
-      - name: Checkout code
+      - name: Checkout Code
         uses: actions/checkout@v3
+
+      - name: Download Flutter Web Build Artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: flutter-web-build
 
       - name: Authenticate to GCP
         uses: google-github-actions/auth@v1
         with:
           credentials_json: ${{ secrets.GCP_CREDENTIALS }}
 
-      - name: Configure Docker
+      - name: Configure Docker Authentication
         run: |
           gcloud auth configure-docker us-central1-docker.pkg.dev
 
-      - name: Build Docker image for government-assistant-api
+      - name: Build Docker Image for API
         run: |
-          docker build -t us-central1-docker.pkg.dev/government-assistant-001/government-assistant-docker-repo/government-assistant-api -f Dockerfile .
+          docker build \
+            -t us-central1-docker.pkg.dev/government-assistant-001/government-assistant-docker-repo/government-assistant-api \
+            -f Dockerfile .
 
-      - name: Build Docker image for Flutter web app
+      - name: Build Docker Image for Flutter Web App
         run: |
-          docker build -t us-central1-docker.pkg.dev/government-assistant-001/government-assistant-docker-repo/flutter-web-app -f Dockerfile.web .
+          docker build \
+            -t us-central1-docker.pkg.dev/government-assistant-001/government-assistant-docker-repo/flutter-web-app \
+            -f Dockerfile.web \
+            .
 
-      - name: Push Docker images
+      - name: Push Docker Images
         run: |
           docker push us-central1-docker.pkg.dev/government-assistant-001/government-assistant-docker-repo/government-assistant-api
           docker push us-central1-docker.pkg.dev/government-assistant-001/government-assistant-docker-repo/flutter-web-app
-
 
   deploy:
     runs-on: ubuntu-latest
@@ -85,7 +95,7 @@ jobs:
       actions: read
 
     steps:
-      - name: Checkout code
+      - name: Checkout Code
         uses: actions/checkout@v3
 
       - name: Authenticate to GCP
@@ -93,7 +103,7 @@ jobs:
         with:
           credentials_json: ${{ secrets.GCP_CREDENTIALS }}
 
-      - name: Deploy to Cloud Run (government-assistant-api)
+      - name: Deploy API to Cloud Run
         env:
           XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
         run: |
@@ -111,5 +121,3 @@ jobs:
             --platform managed \
             --region us-central1 \
             --allow-unauthenticated
-  
-     
