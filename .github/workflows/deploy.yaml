@@ -107,13 +107,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Configure gcloud CLI
-      - name: Configure gcloud CLI
-        uses: google-github-actions/setup-gcloud@v0
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
         with:
-          service_account_email: ${{ secrets.GCP_SA_EMAIL }}
-          service_account_key: ${{ secrets.GCP_SA_KEY }}
-          project_id: government-assistant-001
+          workload_identity_provider: 'projects/183025368636/locations/global/workloadIdentityPools/github-actions-pool/providers/github-actions-provider' 
+          service_account: 'ci-cd-service-account@government-assistant-001.iam.gserviceaccount.com'
 
       # Step 1: Download the Flutter Web build artifact
       - name: Download flutter-web-build artifact
