@@ -106,14 +106,21 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-
-      # Authenticate to GCP
-      - name: Authenticate to GCP
-        uses: google-github-actions/auth@v1
+      # Configure gcloud CLI
+      - name: Configure gcloud CLI
+        uses: google-github-actions/setup-gcloud@v0
         with:
-          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
-          create_credentials_file: true
-          export_environment_variables: true
+          service_account_email: ${{ secrets.GCP_SA_EMAIL }}
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+          project_id: government-assistant-001
+          
+      # Authenticate to GCP
+      #- name: Authenticate to GCP
+       # uses: google-github-actions/auth@v1
+        #with:
+         # credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+          #create_credentials_file: true
+          #export_environment_variables: true
 
       # Debug: List app directory contents
       - name: List files in app directory
