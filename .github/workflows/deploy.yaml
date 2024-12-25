@@ -107,7 +107,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
   
-       # Authenticate to GCP
+      # Authenticate to GCP
       - name: Authenticate to GCP
         uses: google-github-actions/auth@v1
         with:
@@ -118,11 +118,15 @@ jobs:
       # Debug to check authentication
       - name: Verify GCP Authentication
         run: |
-          echo "Checking if the account is authenticated..."
-          gcloud auth list
-          gcloud config list
+          echo "Service account name..."
+          gcloud config get-value account 
           echo "Current active account:"
           gcloud auth print-access-token
+
+      # Debugging: List files to ensure build/web exists
+      - name: List files in the build directory
+        run: |
+          ls -R app/build/
 
       # Deploy Flutter Web App to Google Cloud Storage
       - name: Deploy Flutter Web App to Google Cloud Storage
