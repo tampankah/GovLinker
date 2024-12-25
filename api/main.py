@@ -9,7 +9,10 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://flutter-web-app-183025368636.us-central1.run.app"], 
+    allow_origins=[
+        "https://flutter-web-app-183025368636.us-central1.run.app",  
+        "https://government-assistant-api-183025368636.us-central1.run.app" 
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
