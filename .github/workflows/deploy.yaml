@@ -59,6 +59,19 @@ jobs:
         with:
           name: flutter-web-build
 
+      - name: Verify Downloaded Artifact
+        run: |
+          echo "Verifying downloaded artifact..."
+          ls -la
+          ls -la flutter-web-build
+
+      - name: Prepare Build Context
+        run: |
+          mkdir -p build/web
+          cp -r flutter-web-build/* build/web
+          echo "Build context prepared:"
+          ls -la build/web
+
       - name: Authenticate to GCP
         uses: google-github-actions/auth@v1
         with:
@@ -78,8 +91,7 @@ jobs:
         run: |
           docker build \
             -t us-central1-docker.pkg.dev/government-assistant-001/government-assistant-docker-repo/flutter-web-app \
-            -f Dockerfile.web \
-            .
+            -f Dockerfile.web .
 
       - name: Push Docker Images
         run: |
