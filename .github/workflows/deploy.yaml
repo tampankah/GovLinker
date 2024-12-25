@@ -137,7 +137,7 @@ jobs:
   
       - name: Verify GCS bucket access
         run: |
-          gsutil ls gs://web-flutter-gov-bucket/ || { echo "Error: Unable to access bucket gs://web-flutter-gov-bucket/."; exit 1; }
+          gsutil ls gs://web-flutter-gov-bucket || { echo "Error: Unable to access bucket gs://web-flutter-gov-bucket/."; exit 1; }
   
       - name: Deploy Flutter Web App to Google Cloud Storage
         run: |
