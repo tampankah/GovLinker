@@ -94,10 +94,10 @@ jobs:
             -t us-central1-docker.pkg.dev/government-assistant-001/government-assistant-docker-repo/flutter-web-app \
             -f Dockerfile.web .
   
-      - name: Verify Files in Docker Image  # <- Dodaj ten krok tutaj
+      - name: Verify Files in Docker Image
         run: |
-          docker run -it us-central1-docker.pkg.dev/government-assistant-001/government-assistant-docker-repo/flutter-web-app ls -l /usr/share/nginx/html
-
+          docker run us-central1-docker.pkg.dev/government-assistant-001/government-assistant-docker-repo/flutter-web-app ls -l /usr/share/nginx/html
+        
       - name: Push Docker Images
         run: |
           docker push us-central1-docker.pkg.dev/government-assistant-001/government-assistant-docker-repo/government-assistant-api
