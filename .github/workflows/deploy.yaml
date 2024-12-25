@@ -49,54 +49,55 @@ jobs:
     permissions:
       contents: read
       id-token: write
-
+  
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
-
+  
       - name: Download Flutter Web Build Artifact
         uses: actions/download-artifact@v3
         with:
           name: flutter-web-build
-
+  
       - name: Verify Downloaded Artifact
         run: |
           echo "Verifying downloaded artifact..."
-          ls -la
-          ls -la flutter-web-build
-
+          ls -la  # This will show the current directory's contents
+          ls -la flutter-web-build || echo "flutter-web-build directory doesn't exist"  # Added check for existence of the directory
+  
       - name: Prepare Build Context
         run: |
           mkdir -p build/web
-          cp -r flutter-web-build/* build/web
+          cp -r flutter-web-build/* build/web  # Copy files from the downloaded artifact to the build/web folder
           echo "Build context prepared:"
-          ls -la build/web
-
+          ls -la build/web  # Verify the files are in the build/web directory
+  
       - name: Authenticate to GCP
         uses: google-github-actions/auth@v1
         with:
           credentials_json: ${{ secrets.GCP_CREDENTIALS }}
-
+  
       - name: Configure Docker Authentication
         run: |
           gcloud auth configure-docker us-central1-docker.pkg.dev
-
+  
       - name: Build Docker Image for API
         run: |
           docker build \
             -t us-central1-docker.pkg.dev/government-assistant-001/government-assistant-docker-repo/government-assistant-api \
             -f Dockerfile .
-
+  
       - name: Build Docker Image for Flutter Web App
         run: |
           docker build \
             -t us-central1-docker.pkg.dev/government-assistant-001/government-assistant-docker-repo/flutter-web-app \
             -f Dockerfile.web .
-
+  
       - name: Push Docker Images
         run: |
           docker push us-central1-docker.pkg.dev/government-assistant-001/government-assistant-docker-repo/government-assistant-api
           docker push us-central1-docker.pkg.dev/government-assistant-001/government-assistant-docker-repo/flutter-web-app
+
 
   deploy:
     runs-on: ubuntu-latest
