@@ -110,4 +110,4 @@ jobs:
             --image us-central1-docker.pkg.dev/government-assistant-001/government-assistant-docker-repo/flutter-web-app \
             --platform managed \
             --region us-central1 \
-            --allow-unauthenticatedx
+            --allow-unauthenticated
