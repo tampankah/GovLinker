@@ -74,5 +74,6 @@ def test_invalid_image_processing():
     
     assert response.status_code == 500
     assert "Error processing the document" in response.json()['detail']
-# e 33
+# e 3
+
 
