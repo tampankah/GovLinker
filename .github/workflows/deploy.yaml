@@ -46,15 +46,6 @@ jobs:
         with:
           name: flutter-web-build
           path: app/build/web  # Path to the built web directory
-
-      - name: Verify artifact upload
-        run: |
-          echo "Checking for uploaded artifact..."
-          gh run download -n flutter-web-build --repo ${{ github.repository }} --run ${{ github.run_id }} 
-          if [ $? -ne 0 ]; then
-            echo "Error: Artifact 'flutter-web-build' not found."
-            exit 1
-          fi
   
       # Step 5: Verify Flutter installation
       - name: Verify Flutter installation
@@ -138,15 +129,10 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: flutter-web-build
-          path: /home/runner/work/GovLinker/GovLinker/
-
-      - name: Check workspace directory
-        run: |
-          ls -la /home/runner/work/GovLinker/GovLinker
       
       - name: List downloaded files
         run: |
-          ls -R /home/runner/work/GovLinker/GovLinker/flutter-web-build
+          ls -R flutter-web-build 
           
 
       # Step 2: Sync build/web directory to Google Cloud Storage (GCS)
