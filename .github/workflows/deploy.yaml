@@ -86,8 +86,7 @@ jobs:
       - name: Authenticate to GCP
         uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: 'projects/183025368636/locations/global/workloadIdentityPools/github-actions-pool/providers/github-actions-provider' 
-          service_account: 'ci-cd-service-account@government-assistant-001.iam.gserviceaccount.com'
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
 
       - name: Download flutter-web-build artifact
         uses: actions/download-artifact@v3
