@@ -46,7 +46,7 @@ class ApiProvider with ChangeNotifier {
   }
 
   Future<void> uploadDocument(String filePath) async {
-    var url = Uri.parse('http://government-assistant-api-183025368636.us-central1.run.app/validate-document');
+    var url = Uri.parse('https://government-assistant-api-183025368636.us-central1.run.app/validate-document');
     try {
       _addMessage(Message(
         message: 'Uploading document...',
