@@ -129,15 +129,7 @@ jobs:
           echo "Current directory: $(pwd)"
           echo "Contents of app/build/web:"
           ls -l app/build/web
-
-      - name: Verify GCS bucket access
-        run: |
-          echo "Verifying access to GCS bucket..."
-          gsutil ls gs://web-flutter-gov-bucket/ || {
-            echo "Error: Unable to access bucket gs://web-flutter-gov-bucket/. Check permissions and bucket existence.";
-            exit 1;
-          }
-
+          
       - name: Deploy Flutter Web App to Google Cloud Storage
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
