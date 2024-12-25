@@ -84,7 +84,7 @@ jobs:
           gcloud config list
           echo "Current active account:"
           gcloud auth print-access-token
-          
+
       # Step 3: Configure Docker for pushing images to GCP
       - name: Configure Docker
         run: |
@@ -127,6 +127,7 @@ jobs:
       # Verify GCS bucket access
       - name: Verify GCS bucket access
         run: |
+          gcloud auth activate-service-account --key-file=${{ secrets.GCP_CREDENTIALS }}
           gsutil ls gs://web-flutter-gov-bucket || { echo "Error: Unable to access bucket gs://web-flutter-gov-bucket/."; exit 1; }
  
       # Deploy Flutter Web App to Google Cloud Storage
