@@ -1,8 +1,10 @@
 # Base image with web server
-FROM nginx:latest
+FROM nginx:alpine
 
 # Copy Flutter build files to the Nginx server's web directory
 COPY build/web /usr/share/nginx/html
 
 # Expose port 8080 for the web server
 EXPOSE 8080
+
+CMD ["nginx", "-g", "daemon off;"] 
