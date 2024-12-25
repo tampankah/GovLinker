@@ -98,20 +98,29 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
   
+       # Authenticate to GCP
       - name: Authenticate to GCP
         uses: google-github-actions/auth@v1
         with:
-          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+         credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+         create_credentials_file: true
+         export_environment_variables: true
 
+      # Debug to check authentication
       - name: Verify GCP Authentication
         run: |
+          echo "Checking if the account is authenticated..."
           gcloud auth list
           gcloud config list
-
+          echo "Current active account:"
+          gcloud auth print-access-token
+ 
+      # Verify GCS bucket access
       - name: Verify GCS bucket access
         run: |
           gsutil ls gs://web-flutter-gov-bucket || { echo "Error: Unable to access bucket gs://web-flutter-gov-bucket/."; exit 1; }
-
+ 
+      # Deploy Flutter Web App to Google Cloud Storage
       - name: Deploy Flutter Web App to Google Cloud Storage
         run: |
           set -e
