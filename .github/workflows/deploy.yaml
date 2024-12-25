@@ -69,10 +69,10 @@ jobs:
       - name: Build Docker image for Flutter web app
         run: |
           docker build \
-            --build-arg PORT=80 \  # Add PORT as a build argument
+            --build-arg PORT=80 \  
             -t us-central1-docker.pkg.dev/government-assistant-001/government-assistant-docker-repo/flutter-web-app \
-            -f Dockerfile.web .
-
+            -f Dockerfile.web \
+            . 
       - name: Push Docker images
         run: |
           docker push us-central1-docker.pkg.dev/government-assistant-001/government-assistant-docker-repo/government-assistant-api
