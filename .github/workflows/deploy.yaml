@@ -102,13 +102,6 @@ jobs:
         uses: google-github-actions/auth@v1
         with:
           credentials_json: ${{ secrets.GCP_CREDENTIALS }}
-  
-      - name: Set GOOGLE_APPLICATION_CREDENTIALS
-        run: |
-          echo "${{ secrets.GCP_CREDENTIALS }}" > /tmp/gcp-credentials.json
-          gcloud auth activate-service-account --key-file=/tmp/gcp-credentials.json
-          gsutil ls gs://web-flutter-gov-bucket/ || { echo "Error: Unable to access bucket gs://web-flutter-gov-bucket/."; exit 1; }
-         
 
       - name: Download Flutter Web build artifact
         uses: actions/download-artifact@v3
