@@ -11,6 +11,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write 
 
     steps:
       # Step 1: Checkout the code
@@ -64,6 +67,9 @@ jobs:
   docker-build-push:
     runs-on: ubuntu-latest
     needs: build
+    permissions:
+      contents: read
+      id-token: write
 
     steps:
       # Step 1: Checkout the code again in this job
@@ -74,7 +80,7 @@ jobs:
       - name: Authenticate to GCP
         uses: google-github-actions/auth@v1
         with:
-          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}  # If you still need this step, otherwise remove it
 
       # Debug to check authentication
       - name: Verify GCP Authentication
@@ -103,6 +109,10 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     needs: docker-build-push
+    permissions:
+      contents: read
+      id-token: write
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -110,7 +120,7 @@ jobs:
       - name: Authenticate to GCP
         uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: 'projects/183025368636/locations/global/workloadIdentityPools/github-actions-pool/providers/github-actions-provider' 
+          workload_identity_provider: 'projects/YOUR_PROJECT_NUMBER/locations/global/workloadIdentityPools/github-actions-pool/providers/github-actions-provider'  # Replace with your provider attribute
           service_account: 'ci-cd-service-account@government-assistant-001.iam.gserviceaccount.com'
 
       # Step 1: Download the Flutter Web build artifact
