@@ -107,31 +107,36 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Configure gcloud CLI THe Best!
+      # Configure gcloud CLI
       - name: Configure gcloud CLI
         uses: google-github-actions/setup-gcloud@v0
         with:
           service_account_email: ${{ secrets.GCP_SA_EMAIL }}
           service_account_key: ${{ secrets.GCP_SA_KEY }}
           project_id: government-assistant-001
-   
-      # Debug: List app directory contents
-      - name: List files in app directory
-        run: |
-          ls -R app
 
-      # Deploy Flutter Web App to Google Cloud Storage
+      # Step 1: Download the Flutter Web build artifact
+      - name: Download flutter-web-build artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: flutter-web-build
+
+      # Debug: List downloaded files
+      - name: List downloaded files
+        run: |
+          ls -R flutter-web-build
+
+      # Step 2: Sync build/web directory to Google Cloud Storage (GCS)
       - name: Deploy Flutter Web App to Google Cloud Storage
         run: |
           set -e
           echo "Syncing files to GCS bucket..."
-          gsutil -m rsync -R build/app/web/ gs://web-flutter-gov-bucket/ || {
+          gsutil -m rsync -R flutter-web-build/ gs://web-flutter-gov-bucket/ || {
             echo "Failed to sync files to GCS bucket. Ensure the service account has sufficient permissions.";
             exit 1;
           }
 
-
-      # Deploy API to Cloud Run (if applicable)
+      # Step 3: Deploy API to Cloud Run (if applicable)
       - name: Deploy to Cloud Run (government-assistant-api)
         env:
           XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
