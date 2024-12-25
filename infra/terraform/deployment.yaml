@@ -22,7 +22,7 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.7.12' # Latest stable version
+          flutter-version: '3.27.0' 
 
       - name: Build Flutter Web App
         run: |
@@ -49,6 +49,7 @@ jobs:
     permissions:
       contents: read
       id-token: write
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -66,15 +67,9 @@ jobs:
         run: |
           docker build -t us-central1-docker.pkg.dev/government-assistant-001/government-assistant-docker-repo/government-assistant-api -f Dockerfile .
 
-      - name: Build Docker image for Flutter web app
-        run: |
-          docker build -t us-central1-docker.pkg.dev/government-assistant-001/government-assistant-docker-repo/flutter-web-app -f Dockerfile.web app/build/web
-
       - name: Push Docker images
         run: |
           docker push us-central1-docker.pkg.dev/government-assistant-001/government-assistant-docker-repo/government-assistant-api
-          docker push us-central1-docker.pkg.dev/government-assistant-001/government-assistant-docker-repo/flutter-web-app
-
 
   deploy:
     runs-on: ubuntu-latest
@@ -83,16 +78,30 @@ jobs:
       contents: read
       id-token: write
       actions: read
-
+  
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-
+  
       - name: Authenticate to GCP
         uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_CREDENTIALS }}
-
+  
+      - name: Download flutter-web-build artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: flutter-web-build
+          path: flutter-web-build
+  
+      - name: List downloaded files
+        run: |
+          ls -R flutter-web-build 
+  
+      - name: Deploy Flutter Web App to Google Cloud Storage
+        run: |
+          gcloud storage cp -r flutter-web-build/* gs://web-flutter-gov-bucket/ 
+  
       - name: Deploy to Cloud Run (government-assistant-api)
         env:
           XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
@@ -103,11 +112,4 @@ jobs:
             --region us-central1 \
             --allow-unauthenticated \
             --update-env-vars XAI_API_KEY=$XAI_API_KEY
-
-      - name: Deploy Flutter Web App to Cloud Run
-        run: |
-          gcloud run deploy flutter-web-app \
-            --image us-central1-docker.pkg.dev/government-assistant-001/government-assistant-docker-repo/flutter-web-app \
-            --platform managed \
-            --region us-central1 \
-            --allow-unauthenticated
+  
