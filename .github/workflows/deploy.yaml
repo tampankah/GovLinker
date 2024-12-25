@@ -128,12 +128,16 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: flutter-web-build
+          path: /home/runner/work/GovLinker/GovLinker/
 
-      # Debug: List downloaded files
+      - name: Check workspace directory
+        run: |
+          ls -la /home/runner/work/GovLinker/GovLinker
+      
       - name: List downloaded files
         run: |
-          cd /home/runner/work/GovLinker/GovLinker  # Change to the correct directory
-          ls -R flutter-web-build
+          ls -R /home/runner/work/GovLinker/GovLinker/flutter-web-build
+          
 
       # Step 2: Sync build/web directory to Google Cloud Storage (GCS)
       - name: Deploy Flutter Web App to Google Cloud Storage
