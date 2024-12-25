@@ -125,10 +125,11 @@ jobs:
         run: |
           set -e
           echo "Syncing files to GCS bucket..."
-          gsutil -m rsync -R app/build/web/ gs://web-flutter-gov-bucket/ || {
+          gsutil -m rsync -R app/web/ gs://web-flutter-gov-bucket/ || {
             echo "Failed to sync files to GCS bucket. Ensure the service account has sufficient permissions.";
             exit 1;
           }
+
 
       # Deploy API to Cloud Run (if applicable)
       - name: Deploy to Cloud Run (government-assistant-api)
