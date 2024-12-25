@@ -28,7 +28,7 @@ jobs:
         run: |
           cd app
           flutter pub get
-          flutter build web --release
+          flutter build web 
 
           # Verify if the build/web directory exists after the build
           if [ ! -d "build/web" ]; then
