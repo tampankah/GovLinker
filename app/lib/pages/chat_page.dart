@@ -4,6 +4,8 @@ import '../providers/api_provider.dart';
 import '../widgets/chat_bubble.dart';
 import 'package:file_picker/file_picker.dart';
 
+import 'dart:typed_data';
+
 class ChatPage extends StatelessWidget {
   const ChatPage({super.key});
 
