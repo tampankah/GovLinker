@@ -53,7 +53,9 @@ class ApiProvider with ChangeNotifier {
         isUserMessage: true,
       ));
 
+      // Logowanie wykrytego MIME Type
       String mimeType = _detectMimeType(fileName);
+      print("Detected MIME Type: $mimeType");
 
       var request = http.MultipartRequest('POST', url);
       request.files.add(http.MultipartFile.fromBytes(
@@ -103,12 +105,15 @@ class ApiProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  // Metoda do wykrywania typu MIME
   String _detectMimeType(String fileName) {
     if (fileName.endsWith('.pdf')) {
       return 'application/pdf';
     } else if (fileName.endsWith('.docx')) {
       return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
     } else {
+      // Logowanie błędu, gdy typ MIME nie jest rozpoznany
+      print('Unsupported file type: $fileName');
       throw Exception('Unsupported file type. Only PDF and DOCX are allowed.');
     }
   }
