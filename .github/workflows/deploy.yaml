@@ -19,29 +19,26 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
+      - name: Set up Node.js (for Vite build)
+        uses: actions/setup-node@v3
         with:
-          flutter-version: '3.27.0'
+          node-version: '16'  # Choose appropriate Node.js version for Vite
 
-      - name: Build Flutter Web App
+      - name: Install Dependencies
         run: |
-          cd app
-          flutter pub get
-          flutter build web --release
+          cd public
+          npm install  # Assuming package.json exists in the public folder
 
-          # Verify build success
-          if [ ! -d "build/web" ]; then
-            echo "Error: build/web directory does not exist"
-            exit 1
-          fi
-          echo "Flutter Web build completed successfully."
+      - name: Build Vite Frontend
+        run: |
+          cd public
+          npm run build  # Assuming Vite build script is in package.json
 
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v3
         with:
-          name: flutter-web-build
-          path: app/build/web
+          name: vite-web-build
+          path: public/dist  # Assuming build output is in the dist folder
 
   docker-build-push:
     runs-on: ubuntu-latest
@@ -54,22 +51,22 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
   
-      - name: Download Flutter Web Build Artifact
+      - name: Download Vite Web Build Artifact
         uses: actions/download-artifact@v3
         with:
-          name: flutter-web-build
-          path: flutter-web-build
+          name: vite-web-build
+          path: vite-web-build
   
       - name: Verify Downloaded Artifact
         run: |
           echo "Verifying downloaded artifact..."
           ls -la  # This will show the current directory's contents
-          ls -la flutter-web-build || echo "flutter-web-build directory doesn't exist"  # Added check for existence of the directory
+          ls -la vite-web-build || echo "vite-web-build directory doesn't exist"  # Added check for existence of the directory
   
       - name: Prepare Build Context
         run: |
           mkdir -p build/web
-          cp -r flutter-web-build/* build/web  # Copy files from the downloaded artifact to the build/web folder
+          cp -r vite-web-build/* build/web  # Copy files from the downloaded artifact to the build/web folder
           echo "Build context prepared:"
           ls -la build/web  # Verify the files are in the build/web directory
   
@@ -85,24 +82,23 @@ jobs:
       - name: Build Docker Image for API
         run: |
           docker build \
-            -t us-central1-docker.pkg.dev/government-assistant-001/government-assistant-docker-repo/government-assistant-api \
+            -t us-central1-docker.pkg.dev/navicare-ai/navicare-ai-docker-repo/navicare-ai-api \
             -f Dockerfile .
   
-      - name: Build Docker Image for Flutter Web App
+      - name: Build Docker Image for Vite Web App
         run: |
           docker build \
-            -t us-central1-docker.pkg.dev/government-assistant-001/government-assistant-docker-repo/flutter-web-app \
+            -t us-central1-docker.pkg.dev/navicare-ai/navicare-ai-docker-repo/vite-web-app \
             -f Dockerfile.web .
   
       - name: Verify Files in Docker Image
         run: |
-          docker run us-central1-docker.pkg.dev/government-assistant-001/government-assistant-docker-repo/flutter-web-app ls -l /usr/share/nginx/html
+          docker run us-central1-docker.pkg.dev/navicare-ai/navicare-ai-docker-repo/vite-web-app ls -l /usr/share/nginx/html
         
       - name: Push Docker Images
         run: |
-          docker push us-central1-docker.pkg.dev/government-assistant-001/government-assistant-docker-repo/government-assistant-api
-          docker push us-central1-docker.pkg.dev/government-assistant-001/government-assistant-docker-repo/flutter-web-app
-
+          docker push us-central1-docker.pkg.dev/navicare-ai/navicare-ai-docker-repo/navicare-ai-api
+          docker push us-central1-docker.pkg.dev/navicare-ai/navicare-ai-docker-repo/vite-web-app
 
   deploy:
     runs-on: ubuntu-latest
@@ -125,17 +121,17 @@ jobs:
         env:
           XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
         run: |
-          gcloud run deploy government-assistant-api \
-            --image us-central1-docker.pkg.dev/government-assistant-001/government-assistant-docker-repo/government-assistant-api \
+          gcloud run deploy navicare-ai-api \
+            --image us-central1-docker.pkg.dev/navicare-ai/navicare-ai-docker-repo/navicare-ai-api \
             --platform managed \
             --region us-central1 \
             --allow-unauthenticated \
             --update-env-vars XAI_API_KEY=$XAI_API_KEY
 
-      - name: Deploy Flutter Web App to Cloud Run
+      - name: Deploy Vite Web App to Cloud Run
         run: |
-          gcloud run deploy flutter-web-app \
-            --image us-central1-docker.pkg.dev/government-assistant-001/government-assistant-docker-repo/flutter-web-app \
+          gcloud run deploy vite-web-app \
+            --image us-central1-docker.pkg.dev/navicare-ai/navicare-ai-docker-repo/vite-web-app \
             --platform managed \
             --region us-central1 \
             --allow-unauthenticated
