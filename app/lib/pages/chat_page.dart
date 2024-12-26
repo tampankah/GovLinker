@@ -3,8 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/api_provider.dart';
 import '../widgets/chat_bubble.dart';
 import 'package:file_picker/file_picker.dart';
-
-import 'dart:typed_data';
+import 'dart:typed_data'; 
 
 class ChatPage extends StatelessWidget {
   const ChatPage({super.key});
@@ -13,7 +12,7 @@ class ChatPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Government Assistant'), // Updated title
+        title: const Text('Government Assistant'),
         backgroundColor: Colors.black,
         centerTitle: true,
       ),
@@ -53,8 +52,9 @@ class _ChatBodyState extends State<ChatBody> {
       );
 
       if (result != null) {
-        Uint8List? fileBytes = result.files.single.bytes; 
-        await apiProvider.uploadDocument(fileBytes!);
+        Uint8List? fileBytes = result.files.single.bytes;
+        String fileName = result.files.single.name;
+        await apiProvider.uploadDocument(fileBytes!, fileName);
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -62,7 +62,6 @@ class _ChatBodyState extends State<ChatBody> {
       );
     }
   }
-
 
   @override
   Widget build(BuildContext context) {

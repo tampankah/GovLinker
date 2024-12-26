@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:http_parser/http_parser.dart';
 
 import '../models/models.dart';
@@ -45,7 +45,7 @@ class ApiProvider with ChangeNotifier {
     }
   }
 
-  Future<void> uploadDocument(String filePath) async {
+  Future<void> uploadDocument(Uint8List fileBytes, String fileName) async {
     var url = Uri.parse('https://government-assistant-api-183025368636.us-central1.run.app/validate-document');
     try {
       _addMessage(Message(
@@ -53,12 +53,13 @@ class ApiProvider with ChangeNotifier {
         isUserMessage: true,
       ));
 
-      String mimeType = _detectMimeType(filePath);
+      String mimeType = _detectMimeType(fileName);
 
       var request = http.MultipartRequest('POST', url);
-      request.files.add(await http.MultipartFile.fromPath(
+      request.files.add(http.MultipartFile.fromBytes(
         'file',
-        filePath,
+        fileBytes,
+        filename: fileName,
         contentType: MediaType.parse(mimeType),
       ));
 
@@ -102,10 +103,10 @@ class ApiProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  String _detectMimeType(String filePath) {
-    if (filePath.endsWith('.pdf')) {
+  String _detectMimeType(String fileName) {
+    if (fileName.endsWith('.pdf')) {
       return 'application/pdf';
-    } else if (filePath.endsWith('.docx')) {
+    } else if (fileName.endsWith('.docx')) {
       return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
     } else {
       throw Exception('Unsupported file type. Only PDF and DOCX are allowed.');
