@@ -51,8 +51,8 @@ class _ChatBodyState extends State<ChatBody> {
       );
 
       if (result != null) {
-        String filePath = result.files.single.path!;
-        await apiProvider.uploadDocument(filePath); // Upload the document for validation
+        Uint8List? fileBytes = result.files.single.bytes; 
+        await apiProvider.uploadDocument(fileBytes!);
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -60,6 +60,7 @@ class _ChatBodyState extends State<ChatBody> {
       );
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
