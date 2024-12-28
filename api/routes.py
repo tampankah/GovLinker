@@ -83,7 +83,10 @@ def process_image_with_grok(base64_image: str) -> dict:
     Sends a base64-encoded image to the Grok Vision model for analysis.
     """
     try:
+        # Log the request before sending
         logger.debug("Sending request to Grok Vision model.")
+
+        # Call the Grok Vision model with the provided base64 image and analysis instructions
         response = client.chat.completions.create(
             model=VISION_MODEL_NAME,  # Vision model name
             messages=[
@@ -94,24 +97,47 @@ def process_image_with_grok(base64_image: str) -> dict:
                             "type": "image_url",
                             "image_url": {
                                 "url": f"data:image/jpeg;base64,{base64_image}",
-                                "detail": "high",
+                                "detail": "high",  # Image detail level
                             },
                         },
                         {
                             "type": "text",
-                            "text": "Analyze this document and extract all fields. Split the output into two categories: 'completed_fields' and 'empty_fields'. For 'completed_fields', include the 'field_name' and the 'field_value'. For 'empty_fields', include only the 'field_name'. Additionally, identify and validate required fields, and include their statuses (e.g., 'filled' or 'missing') in the response. Return the results in a clear JSON format structured as follows:\n{\n  \"completed_fields\": [\n    { \"field_name\": \"<field_label>\", \"field_value\": \"<value_entered>\" }\n  ],\n  \"empty_fields\": [\n    { \"field_name\": \"<field_label>\" }\n  ],\n  \"required_field_statuses\": [\n    { \"field_name\": \"<field_label>\", \"status\": \"filled\" or \"missing\" }\n  ]\n}"
+                            "text": (
+                                "Analyze this document and extract all fields. Split the output into two categories: "
+                                "'completed_fields' and 'empty_fields'. For 'completed_fields', include the "
+                                "'field_name' and the 'field_value'. For 'empty_fields', include only the 'field_name'. "
+                                "Additionally, identify and validate required fields, and include their statuses (e.g., "
+                                "'filled' or 'missing') in the response. Return the results in a clear JSON format "
+                                "structured as follows:\n{\n  \"completed_fields\": [\n    { \"field_name\": \"<field_label>\", "
+                                "\"field_value\": \"<value_entered>\" }\n  ],\n  \"empty_fields\": [\n    { \"field_name\": "
+                                "\"<field_label>\" }\n  ],\n  \"required_field_statuses\": [\n    { \"field_name\": "
+                                "\"<field_label>\", \"status\": \"filled\" or \"missing\" }\n  ]\n}\n\nPlease note that the "
+                                "'X' next to the 'Signature of Applicant' label indicates the location where the applicant is "
+                                "required to sign. It does not mean that the signature has already been provided or that any "
+                                "information has been marked. The applicant must place their signature in the designated area "
+                                "to complete the form."
+                            )
                         }
-
-                    ],
+                    ]
                 }
             ],
         )
+
+        # Log the response from the Grok Vision model
         logger.debug("Received response from Grok Vision model: %s", response)
-        return response.choices[0].message  # Return the structured result
+
+        # Return the structured response from the model
+        return response.choices[0].message
+
     except Exception as e:
+        # Log the error if something goes wrong
         logger.error("Error while processing image with Grok Vision model: %s", str(e))
+        
+        # Handle specific error cases
         if "404" in str(e):
             raise HTTPException(status_code=404, detail="The requested Grok Vision model does not exist or is inaccessible.")
+        
+        # General error handling
         raise HTTPException(status_code=500, detail=f"Error while processing image: {str(e)}")
 
 
@@ -166,7 +192,57 @@ def process_document_with_text_model(aggregated_results: list) -> dict:
         response = client.chat.completions.create(
             model=CHAT_MODEL_NAME,  # Chat model name
             messages=[
-                {"role": "system", "content": "You are a helpful, friendly, and clear assistant with expertise in analyzing and solving form-related issues. Your task is to provide users with personalized guidance based on the following extracted form data:\n\n1. **Completed Fields**:\n   These are the fields that the user has already filled out:\n   ```\n   {completed_fields}\n   ```\n   - Acknowledge the user's effort in completing these fields.\n   - Verify if the values provided are logical or valid based on common form standards.\n\n2. **Empty Fields**:\n   These are the fields that the user has not yet filled out:\n   ```\n   {empty_fields}\n   ```\n   - For each empty field, explain why this field is important and what information is required.\n   - Provide clear instructions on how to complete each field.\n   - If applicable, include examples or tips to help the user fill out the field accurately.\n\n3. **Required Field Statuses**:\n   Validation results of required fields:\n   ```\n   {required_field_statuses}\n   ```\n   - Identify required fields that are still missing or incomplete.\n   - Prioritize missing required fields and provide step-by-step guidance to address these issues.\n\n### **Output Structure**:\n- Start with a friendly acknowledgment of the user's effort.\n- Highlight the completed fields and confirm their validity (if relevant).\n- Provide a detailed step-by-step guide for each empty field, prioritizing required fields marked as 'missing'.\n- Use a helpful, supportive tone and add examples where appropriate.\n- End with a motivational statement encouraging the user to complete the remaining fields.\n\n### Example Output:\n\"Great work filling out the form so far! Here's what I noticed:\n\n✅ **Completed Fields**:\n- **Full Name**: John Doe\n- **Date of Birth**: 1990-01-01\n   These fields look good!\n\n⚠️ **Fields That Need Your Attention**:\n- **Email Address**: This is missing. Please enter your email address, e.g., john.doe@example.com, so we can contact you if needed.\n- **Phone Number**: This is empty. Add a phone number in this format: (123) 456-7890.\n\n🚨 **Required Fields Missing**:\n- **Address**: This field is critical for processing your request. Enter your full mailing address, such as '123 Main St, Springfield, IL 12345'.\n\nKeep going! You're almost there—let's finish strong! 📝\"\n\nNow generate tailored and supportive help text for the user based on the provided data."},
+                {
+                    "role": "system",
+                    "content": """You are a helpful, friendly, and clear assistant with expertise in analyzing and solving form-related issues. 
+                    Provide personalized guidance based on the extracted form data:
+
+                    1. **Completed Fields**:
+                       - Acknowledge the user's effort.
+                       - Verify if the values provided are logical and valid.
+                       ``` 
+                       {completed_fields}
+                       ```
+
+                    2. **Empty Fields**:
+                       - Explain the importance of each missing field.
+                       - Provide instructions and examples to help complete it.
+                       ``` 
+                       {empty_fields}
+                       ```
+
+                    3. **Required Field Statuses**:
+                       - Identify required fields that are incomplete.
+                       - Prioritize missing required fields and guide the user to address them.
+                       ``` 
+                       {required_field_statuses}
+                       ```
+
+                    ### Output Structure:
+                    - Start with an acknowledgment of the user's effort.
+                    - Highlight completed fields and confirm their validity.
+                    - Provide step-by-step guidance for each missing field, prioritizing required ones.
+                    - Use a supportive tone with examples where relevant.
+                    - End with encouragement to finish the form.
+
+                    ### Example Output:
+                    "Great work so far! Here's what I noticed:
+
+                    ✅ **Completed Fields**:
+                    - **Full Name**: John Doe
+                    - **Date of Birth**: 1990-01-01
+                       These look good!
+
+                    ⚠️ **Fields That Need Attention**:
+                    - **Email Address**: Missing. Please enter your email, e.g., john.doe@example.com.
+
+                    🚨 **Required Fields Missing**:
+                    - **Address**: Enter your full address, e.g., '123 Main St, Springfield, IL 12345'.
+
+                    Keep going, you're almost there! 📝"
+
+                    Generate helpful, supportive text based on the provided data."""
+                },
                 {"role": "user", "content": document_context},
             ],
         )
@@ -177,7 +253,7 @@ def process_document_with_text_model(aggregated_results: list) -> dict:
     except Exception as e:
         logger.error("Error processing with Grok Text model: %s", str(e))
         raise HTTPException(status_code=500, detail=f"Error processing with Grok Text model: {str(e)}")
-        
+
 @router.post("/generate-response", response_model=List[str])
 def ask_question(request: QuestionRequest):
     """
