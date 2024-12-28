@@ -22,7 +22,7 @@ def convert_pdf_to_images(pdf_path):
         images.append(image)
       return images
   except Exception as e:
-    logger.error("Error converting PDF to images: %s", str(e))
+    
     raise Exception("Error converting PDF to images")
 
 def pil_image_to_base64(pil_image: Image.Image) -> str:
