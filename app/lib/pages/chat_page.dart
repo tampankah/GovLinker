@@ -15,6 +15,13 @@ class ChatPage extends StatelessWidget {
         title: const Text('Government Assistant'),
         backgroundColor: Colors.black,
         centerTitle: true,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1.0),
+          child: Container(
+            color: Colors.white,
+            height: 1.0,
+          ),
+        ),
       ),
       body: const ChatBody(),
     );
@@ -38,6 +45,7 @@ class _ChatBodyState extends State<ChatBody> {
     final apiProvider = Provider.of<ApiProvider>(context, listen: false);
     await apiProvider.generateResponse(_controller.text);
 
+    // Clear the text field after sending the message
     _controller.clear();
   }
 
