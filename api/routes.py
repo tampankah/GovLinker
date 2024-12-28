@@ -9,6 +9,7 @@ import os
 from openai import OpenAI
 
 # API key and model names for OpenAI integration
+VISION_MODEL_NAME = "grok-vision-beta"  # Vision model name
 CHAT_MODEL_NAME = "grok-beta"  # Chat model name
 
 config = load_config('config/config.yaml')
