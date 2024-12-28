@@ -1,32 +1,47 @@
 import base64
 from PIL import Image
 import io
-import PyPDF2
+from typing import List
+from pdf2image import convert_from_path
 
-def encode_image_to_base64(image_file):
-    image_file.seek(0) 
-    image_data = image_file.read()
-    return base64.b64encode(image_data).decode('utf-8')
+def encode_image_to_base64(image_file: io.BytesIO) -> str:
+    """Encodes an image file to Base64."""
+    try:
+        image_file.seek(0)  # Resets the file pointer to the beginning
+        image_data = image_file.read()
+        return base64.b64encode(image_data).decode('utf-8')
+    except Exception as e:
+        raise ValueError(f"Error encoding image to Base64: {e}")
 
-def convert_pdf_to_images(pdf_path):
-  """
-  Converts a PDF file to a list of PIL Image objects.
-  """
-  try:
-    with open(pdf_path, 'rb') as pdf_file:
-      pdf_reader = PyPDF2.PdfReader(pdf_file)
-      images = []
-      for page_num in range(len(pdf_reader.pages)):
-        page = pdf_reader.pages[page_num]
-        image = page.extract_image(format='RGB')  # Extract page as RGB image
-        images.append(image)
-      return images
-  except Exception as e:
-    
-    raise Exception("Error converting PDF to images")
+def convert_pdf_to_images(pdf_path: str, dpi: int = 200) -> List[Image.Image]:
+    """Converts a PDF file into a list of PIL images.
 
-def pil_image_to_base64(pil_image: Image.Image) -> str:
-    """Konwertuje obiekt obrazu PIL na Base64."""
-    buffer = io.BytesIO()
-    pil_image.save(buffer, format="JPEG")
-    return base64.b64encode(buffer.getvalue()).decode("utf-8")
+    Args:
+        pdf_path (str): Path to the PDF file.
+        dpi (int): Image resolution in DPI (default is 200).
+
+    Returns:
+        List[Image.Image]: List of images in PIL format.
+    """
+    try:
+        images = convert_from_path(pdf_path, dpi=dpi)
+        return images
+    except Exception as e:
+        raise ValueError(f"Error converting PDF to images: {e}")
+
+def pil_image_to_base64(pil_image: Image.Image, format: str = "JPEG") -> str:
+    """Converts a PIL image object to Base64.
+
+    Args:
+        pil_image (Image.Image): PIL image object.
+        format (str): Image format for saving (e.g., 'JPEG', 'PNG').
+
+    Returns:
+        str: Image encoded as a Base64 string.
+    """
+    try:
+        buffer = io.BytesIO()
+        pil_image.save(buffer, format=format)
+        return base64.b64encode(buffer.getvalue()).decode("utf-8")
+    except Exception as e:
+        raise ValueError(f"Error converting PIL image to Base64: {e}")
