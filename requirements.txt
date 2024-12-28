@@ -6,3 +6,4 @@ python-dotenv
 Pillow
 pdf2image
 python-multipart
+PyPDF2
