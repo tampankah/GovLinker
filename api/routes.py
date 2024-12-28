@@ -181,24 +181,22 @@ def process_document_with_text_model(aggregated_results: list) -> dict:
 @router.post("/generate-response", response_model=List[str])
 def ask_question(request: QuestionRequest):
     """
-    Responds to the user's question and includes tool-generated HTML content in the response.
+    Responds to the user's question, facilitating a longer, intelligent conversation and providing document links when needed.
     """
     # Define the base message sequence
     base_messages = [
-    {
-        "role": "system",
-        "content": "You are a funny, friendly, and incredibly knowledgeable assistant who works at the DMV (Department of Motor Vehicles). "
-                   "You are an expert in all DMV processes, forms, regulations, and problem-solving scenarios. "
-                   "Your job is to help users in a lighthearted, easy-to-understand, and supportive way. "
-                   "Explain complex processes in simple terms, use relatable analogies, and add a touch of humor to make DMV topics less stressful. "
-                   "Always stay polite, positive, and provide clear, actionable solutions to any DMV-related questions or issues."
-    },
-    {
-        "role": "user",
-        "content": "Question: {request.question}"
-    }
-]
+        {
+            "role": "system",
+            "content": "You are a funny, friendly, and incredibly knowledgeable assistant who works at the DMV (Department of Motor Vehicles). "
+                       "You are an expert in all DMV processes, forms, regulations, and problem-solving scenarios. "
+                       "Your job is to help users in a lighthearted, easy-to-understand, and supportive way. "
+                       "Explain complex processes in simple terms, use relatable analogies, and add a touch of humor to make DMV topics less stressful. "
+                       "Always stay polite, positive, and provide clear, actionable solutions to any DMV-related questions or issues."
+        }
+    ]
 
+    # Append the user query to the message sequence
+    base_messages.append({"role": "user", "content": request.question})
 
     try:
         # Initial API call to the chat model
@@ -208,32 +206,41 @@ def ask_question(request: QuestionRequest):
         )
 
         # Extract the first response from the chat model
-        message = response.choices[0].message
+        initial_message = response.choices[0].message
 
-        # Generate HTML content with links to documents
+        # Check if the user's query involves document-related topics
+        requires_document = any(keyword in request.question.lower() for keyword in ["form", "document", "application", "download"])
+
+        # If documents are relevant, prepare document links HTML
         document_links_html = ""
-        for doc_key, doc_info in DOCUMENTS_DB.items():
-            document_links_html += f'<p><a href="{doc_info["url"]}" download="{doc_info["document_name"]}">{doc_info["document_name"]}</a></p>'
+        if requires_document:
+            for doc_key, doc_info in DOCUMENTS_DB.items():
+                document_links_html += f'<p><a href="{doc_info["url"]}" download="{doc_info["document_name"]}">{doc_info["document_name"]}</a></p>'
 
-        # Define the tool-generated HTML message with document links
-        function_call_result_message = {
-            "role": "tool",
-            "content": f"<html><body><h1>DMV Assistance Page</h1><p>This is the generated HTML content for the user's query.</p>{document_links_html}</body></html>",
-            "tool_call_id": None,
-        }
+        # Create an interactive response depending on the context
+        if requires_document:
+            grok_response = (
+                f"Sure thing! It sounds like you need some official documents. Here are the ones I think will help you: "
+                f"{document_links_html} Let me know if you'd like help filling them out or understanding what to do next!"
+            )
+        else:
+            grok_response = (
+                f"Great question! {initial_message.content} "
+                f"If at any point you think a DMV document might help, just let me know!"
+            )
 
-        # Prepare a follow-up chat completion request with the tool call result
-        follow_up_messages = base_messages + [response.choices[0].message, function_call_result_message]
+        # Prepare follow-up messages for continued conversation
+        follow_up_messages = base_messages + [initial_message, {"role": "assistant", "content": grok_response}]
 
-        # Make the second API call with the tool result embedded
+        # Make the second API call to refine or extend the response
         final_response = client.chat.completions.create(
             model=CHAT_MODEL_NAME,
             messages=follow_up_messages,
         )
 
-        # Extract the final response content
-        answer = final_response.choices[0].message.content
-        utf8_response = answer.encode("utf-8").decode("utf-8")  # Ensure UTF-8 compatibility
+        # Extract and process the final response content
+        final_answer = final_response.choices[0].message.content
+        utf8_response = final_answer.encode("utf-8").decode("utf-8")  # Ensure UTF-8 compatibility
 
         return [utf8_response]
 

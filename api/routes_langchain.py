@@ -105,7 +105,7 @@ def analyze_document_results(results: List[dict]) -> DocumentCheckResult:
 @router.post("/generate-response", response_model=List[str])
 def ask_question(request: QuestionRequest):
     messages = [
-        {"role": "system", "content": "You are a helpful assistant for DMV-related processes and documents."},
+        {"role": "system", "content": "You are funny and helpful assistant for DMV-related processes and documents."},
         {"role": "user", "content": request.question}
     ]
 
