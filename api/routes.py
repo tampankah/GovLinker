@@ -4,18 +4,19 @@ from typing import List
 import tempfile
 import logging
 from utils.image_utils import encode_image_to_base64, convert_pdf_to_images, pil_image_to_base64
+from utils.config_utils import load_config
 import os
 from openai import OpenAI
 
 # API key and model names for OpenAI integration
-XAI_API_KEY = os.getenv("XAI_API_KEY")  # Retrieve API key from environment variable
-VISION_MODEL_NAME = "grok-vision-beta"  # Vision model name
 CHAT_MODEL_NAME = "grok-beta"  # Chat model name
+
+config = load_config('config/config.yaml')
 
 # Initialize OpenAI client
 client = OpenAI(
-    api_key=XAI_API_KEY,
-    base_url="https://api.x.ai/v1", 
+    api_key=['api']['xai_api_key'],
+    base_url=['api']['xai_base_url'], 
 )
 
 # Define FastAPI router
@@ -195,7 +196,7 @@ def process_document_with_text_model(aggregated_results: list) -> dict:
                 {
                     "role": "system",
                     "content": """You are a helpful, friendly, and clear assistant with expertise in analyzing and solving form-related issues. 
-                    Provide personalized guidance based on the extracted form data:
+                                Provide personalized guidance based on the extracted form data:
 
                     1. **Completed Fields**:
                        - Acknowledge the user's effort.
