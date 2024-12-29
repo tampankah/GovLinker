@@ -66,27 +66,51 @@ def ask_question(request: QuestionRequest):
     base_messages.append({"role": "user", "content": request.question})
 
     try:
+        # Initial API call to the chat model
         response = client.chat.completions.create(
             model=CHAT_MODEL_NAME,
             messages=base_messages,
         )
 
+        # Extract the first response from the chat model
         initial_message = response.choices[0].message
 
-        # Prepare document links if relevant
-        document_links_html = ""
-        if "document" in request.question.lower():
-            document_links_html = create_document_links()
+        # Check if the user's query involves document-related topics
+        requires_document = any(keyword in request.question.lower() for keyword in ["form", "document", "application", "download"])
 
-        grok_response = create_grok_response(initial_message, document_links_html)
+        # If documents are relevant, prepare document links HTML
+        document_links_html = ""
+        if requires_document:
+            for doc_key, doc_info in DOCUMENTS_DB.items():
+                document_links_html += f'<p><a href="{doc_info["url"]}" download="{doc_info["document_name"]}">{doc_info["document_name"]}</a></p>'
+
+        # Create an interactive response depending on the context
+        if requires_document:
+            grok_response = (
+                f"Sure thing! It sounds like you need some official documents. Here are the ones I think will help you: "
+                f"{document_links_html} Let me know if you'd like help filling them out or understanding what to do next!"
+            )
+        else:
+            grok_response = (
+                f"Great question! {initial_message.content} "
+                f"If at any point you think a DMV document might help, just let me know!"
+            )
+
+        # Prepare follow-up messages for continued conversation
         follow_up_messages = base_messages + [initial_message, {"role": "assistant", "content": grok_response}]
 
+        # Make the second API call to refine or extend the response
         final_response = client.chat.completions.create(
             model=CHAT_MODEL_NAME,
             messages=follow_up_messages,
         )
 
-        return [final_response.choices[0].message.content]
+        # Extract and process the final response content
+        final_answer = final_response.choices[0].message.content
+        utf8_response = final_answer.encode("utf-8").decode("utf-8")  # Ensure UTF-8 compatibility
+
+        return [utf8_response]
 
     except Exception as e:
+        # Handle exceptions and raise HTTP errors
         raise HTTPException(status_code=500, detail=f"Error processing the request: {str(e)}")
