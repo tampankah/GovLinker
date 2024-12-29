@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from typing import List
 from api.services.openai_service import process_image_with_grok, process_document_with_text_model
 from api.utils.image_utils import encode_image_to_base64, convert_pdf_to_images, pil_image_to_base64
+from api.models.document_models import DocumentCheckResult, QuestionRequest, DocumentRequest, DocumentResponse, FunctionCallResultMessage
 import tempfile
 import logging
 import os
