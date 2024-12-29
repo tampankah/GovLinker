@@ -2,6 +2,8 @@ api:
   xai_api_key: "XAI_API_KEY"
   xai_base_url: "https://api.x.ai/v1"
 
+
+
 logging:
   level: "INFO"
   file: "logs/pipeline.log"
