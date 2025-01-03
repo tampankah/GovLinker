@@ -12,16 +12,42 @@ class ChatPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Govgiggler',
-          style: TextStyle(
-            color: Colors.deepPurple, 
-            fontWeight: FontWeight.bold,
+        title: ShaderMask(
+          blendMode: BlendMode.srcIn,
+          shaderCallback: (bounds) => LinearGradient(
+            colors: [Colors.black, Colors.black], // Black interior
+          ).createShader(bounds),
+          child: Stack(
+            children: [
+              // Outline layer
+              Text(
+                'Govgiggler',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.5,
+                  foreground: Paint()
+                    ..style = PaintingStyle.stroke
+                    ..strokeWidth = 2
+                    ..color = Colors.white, // White outline
+                ),
+              ),
+              // Filled text layer
+              Text(
+                'Govgiggler',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.5,
+                  color: Colors.black, // Black interior
+                ),
+              ),
+            ],
           ),
         ),
-        backgroundColor: Colors.grey[800], 
+        backgroundColor: Colors.grey[800],
         centerTitle: true,
-        elevation: 0, 
+        elevation: 0,
       ),
       body: const ChatBody(),
     );
@@ -38,18 +64,15 @@ class ChatBody extends StatefulWidget {
 class _ChatBodyState extends State<ChatBody> {
   final TextEditingController _controller = TextEditingController();
 
-  // Function to send the message
   void _sendMessage() async {
     if (_controller.text.trim().isEmpty) return;
 
     final apiProvider = Provider.of<ApiProvider>(context, listen: false);
     await apiProvider.generateResponse(_controller.text);
 
-    // Clear the text field after sending the message
     _controller.clear();
   }
 
-  // Function to handle document upload
   void _addDocument() async {
     final apiProvider = Provider.of<ApiProvider>(context, listen: false);
 
@@ -94,7 +117,6 @@ class _ChatBodyState extends State<ChatBody> {
           padding: const EdgeInsets.all(8.0),
           child: Row(
             children: [
-              // Add Document Icon Button
               IconButton(
                 icon: const Icon(Icons.attach_file, color: Colors.white),
                 onPressed: _addDocument,
