@@ -15,11 +15,11 @@ class ChatPage extends StatelessWidget {
         title: const Text(
           'Govgiggler',
           style: TextStyle(
-            color: Colors.purple, 
+            color: Colors.deepPurple, 
             fontWeight: FontWeight.bold,
           ),
         ),
-        backgroundColor: Colors.grey, 
+        backgroundColor: Colors.grey[800], 
         centerTitle: true,
         elevation: 0, 
       ),

@@ -44,7 +44,7 @@ class ChatBubble extends StatelessWidget {
             color: isUserMessage ? Colors.black : Colors.grey[800], // Black for user, grey for response
             borderRadius: BorderRadius.circular(12),
             border: isUserMessage
-                ? Border.all(color: Colors.purple, width: 2) // Purple border for user message
+                ? Border.all(color: Colors.deepPurple, width: 2) // Purple border for user message
                 : null, // No border for response
           ),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
