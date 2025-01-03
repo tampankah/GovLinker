@@ -4,6 +4,9 @@
 
 **GovLinker** is an innovative platform designed to revolutionize how citizens and businesses interact with government services. By leveraging the advanced capabilities of **Grok AI**, this application streamlines bureaucracy, provides intelligent support, and helps users navigate the complexities of government processes with ease.
 
+### **Check it out:**
+🔗 **[Project Demo](https://flutter-web-app-183025368636.us-central1.run.app/)** 
+🔗 **[Project Demo on lablab.ai](https://lablab.ai/event/doge-ai-hackathon/hacktivate/govgiggler-a-smart-government-assistant)**  
 ---
 
 ![DEMO](https://github.com/nesistor/GovGiggler/blob/main/xai9.png)
