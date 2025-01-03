@@ -15,7 +15,7 @@ class MyApp extends StatelessWidget {
     return ChangeNotifierProvider<ApiProvider>(
       create: (_) => ApiProvider(),
       child: MaterialApp(
-        title: 'Government Assistant',
+        title: 'GovGiggler',
         theme: ThemeData(
           scaffoldBackgroundColor: Colors.black, // Black background for the whole app
           appBarTheme: const AppBarTheme(

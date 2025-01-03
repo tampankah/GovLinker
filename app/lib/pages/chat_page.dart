@@ -12,16 +12,16 @@ class ChatPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Government Assistant'),
-        backgroundColor: Colors.black,
-        centerTitle: true,
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1.0),
-          child: Container(
-            color: Colors.white,
-            height: 1.0,
+        title: const Text(
+          'Govgiggler',
+          style: TextStyle(
+            color: Colors.purple, 
+            fontWeight: FontWeight.bold,
           ),
         ),
+        backgroundColor: Colors.grey, 
+        centerTitle: true,
+        elevation: 0, 
       ),
       body: const ChatBody(),
     );
