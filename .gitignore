@@ -18,27 +18,33 @@ __pycache__
 
 .idea/*
 
-# Flutter/Dart specific files
-.build/
-.android/
-.ios/
-.windows/
-.linux/
-.macos/
-test/
-.idea/
-*.iml
+# Flutter/Dart specific files inside the app directory
+app/.build/
+app/.android/
+app/.ios/
+app/.windows/
+app/.linux/
+app/.macos/
+app/test/
+app/.idea/
+app/*.iml
+app/*.lock
+app/*.log
+app/.dart_tool/
+app/.packages
+app/.pub-cache/
+app/.flutter-plugins
+app/.flutter-plugins-dependencies
+app/.flutter-versions
+app/.gradle/
+app/.vscode/
+
+# Allow only the lib folder inside the app directory
+!app/lib/
+!app/lib/**
+
+# General ignores
 *.lock
 *.log
-.dart_tool/
-.packages
-.pub-cache/
-.flutter-plugins
-.flutter-plugins-dependencies
-.flutter-versions
-.gradle/
-.vscode/
-
-# Allow only the lib folder
-!lib/
-!lib/**
+.DS_Store
+Thumbs.db
