@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'dart:typed_data';
 import 'package:http_parser/http_parser.dart';
+import 'package:flutter_emoji/flutter_emoji.dart';  // Import paczki flutter_emoji
 
 import '../models/models.dart';
 
@@ -28,6 +29,10 @@ class ApiProvider with ChangeNotifier {
 
         if (responseData is List && responseData.isNotEmpty) {
           String serverResponse = responseData[0];
+
+          // Przetwarzanie odpowiedzi w celu zamiany tekstowych emotikonów na emoji
+          serverResponse = _parseEmojis(serverResponse);
+
           _addMessage(Message(
             message: serverResponse,
             isUserMessage: false,
@@ -73,6 +78,10 @@ class ApiProvider with ChangeNotifier {
         var responseData = json.decode(responseBody);
 
         String resultMessage = responseData['content'] ?? 'No content available';
+        
+        // Przetwarzanie odpowiedzi w celu zamiany tekstowych emotikonów na emoji
+        resultMessage = _parseEmojis(resultMessage);
+
         _addMessage(Message(
           message: resultMessage,
           isUserMessage: false,
@@ -116,5 +125,11 @@ class ApiProvider with ChangeNotifier {
       print('Unsupported file type: $fileName');
       throw Exception('Unsupported file type. Only PDF and DOCX are allowed.');
     }
+  }
+
+  // Funkcja do parsowania tekstu na emoji
+  String _parseEmojis(String message) {
+    final emojiParser = EmojiParser();
+    return emojiParser.emojify(message);  // Przetwarza tekst i konwertuje go na emoji
   }
 }
