@@ -25,7 +25,6 @@ __pycache__
 .windows/
 .linux/
 .macos/
-web/
 test/
 .idea/
 *.iml
