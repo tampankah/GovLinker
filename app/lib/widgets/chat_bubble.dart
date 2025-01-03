@@ -41,18 +41,19 @@ class ChatBubble extends StatelessWidget {
         padding: const EdgeInsets.all(8.0),
         child: Container(
           decoration: BoxDecoration(
-            color: isUserMessage ? Colors.grey : Colors.black,
+            color: isUserMessage ? Colors.black : Colors.grey[800], 
             borderRadius: BorderRadius.circular(12),
-            border: isUserMessage
-                ? null
-                : Border.all(color: Colors.white, width: 2),
+            border: Border.all(
+              color: isUserMessage ? Colors.purple : Colors.white,
+              width: 2,
+            ),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: MarkdownBody(
             data: renderedMessage,
             styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context)).copyWith(
               p: TextStyle(
-                color: Colors.white,
+                color: Colors.white, // White text for both user and response
                 fontWeight: isUserMessage ? FontWeight.normal : FontWeight.bold,
               ),
               listBullet: const TextStyle(color: Colors.white),
