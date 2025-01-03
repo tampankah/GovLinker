@@ -19,12 +19,12 @@ __pycache__
 .idea/*
 
 # Flutter/Dart specific files
-.build/
-.android/
-.ios/
-.windows/
-.linux/
-.macos/
+build/
+android/
+ios/
+windows/
+linux/
+macos/
 web/
 test/
 .idea/
