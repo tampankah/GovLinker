@@ -18,3 +18,28 @@ __pycache__
 
 .idea/*
 
+# Flutter/Dart specific files
+.build/
+.android/
+.ios/
+.windows/
+.linux/
+.macos/
+web/
+test/
+.idea/
+*.iml
+*.lock
+*.log
+.dart_tool/
+.packages
+.pub-cache/
+.flutter-plugins
+.flutter-plugins-dependencies
+.flutter-versions
+.gradle/
+.vscode/
+
+# Allow only the lib folder
+!lib/
+!lib/**
