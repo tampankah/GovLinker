@@ -1,1 +1,1 @@
-add enpoint feedback, appointment,d
+add enpoint feedback, appointment,
