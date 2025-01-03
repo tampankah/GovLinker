@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from api.routes2 import router
+from api.routes import router
 
 app = FastAPI(
     title="DMV Document Validator and Assistant",
