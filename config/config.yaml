@@ -7,3 +7,4 @@ api:
 logging:
   level: "INFO"
   file: "logs/pipeline.log"
+  variance: "apy.py"
