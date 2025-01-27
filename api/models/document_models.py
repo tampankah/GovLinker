@@ -6,9 +6,6 @@ class DocumentCheckResult(BaseModel):
     missing_fields: List[str]
     errors: List[str]
 
-class QuestionRequest(BaseModel):
-    question: str
-
 class DocumentRequest(BaseModel):
     document_type: str
 
