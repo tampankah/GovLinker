@@ -7,3 +7,4 @@ Pillow
 pdf2image
 python-multipart
 PyPDF2
+overflow
