@@ -27,7 +27,6 @@ app/.linux/
 app/.macos/
 app/test/
 app/.idea/
-app/*.iml
 app/*.lock
 app/*.log
 app/.dart_tool/
